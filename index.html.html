@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שכר Pro</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #f5f7fa;
+  --surface3: #edf0f5;
+  --border: #dde3ed;
+  --accent: #2563eb;
+  --accent2: #059669;
+  --accent3: #d97706;
+  --danger: #dc2626;
+  --purple: #7c3aed;
+  --text: #1e293b;
+  --text2: #64748b;
+  --text3: #94a3b8;
+  --radius: 14px;
+  --shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;direction:rtl;}
+
+/* LOCK */
+#lockscreen{position:fixed;inset:0;background:linear-gradient(135deg,#1e3a5f,#1e293b);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+.lock-logo{font-size:44px;font-weight:900;color:#fff;letter-spacing:-2px;}
+.lock-logo span{color:#36d9a0;}
+.lock-box{background:#fff;border-radius:20px;padding:36px 40px;display:flex;flex-direction:column;gap:14px;width:320px;align-items:center;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.lock-box h3{font-size:15px;color:var(--text2);font-weight:600;}
+.lock-box input{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:20px;padding:12px 16px;outline:none;text-align:center;letter-spacing:6px;width:100%;}
+.lock-box input:focus{border-color:var(--accent);}
+.lock-err{color:var(--danger);font-size:13px;min-height:16px;}
+.lock-hint{font-size:11px;color:var(--text3);}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1.5px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:14px;height:58px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.topbar-logo{font-size:20px;font-weight:900;color:var(--accent);letter-spacing:-1px;white-space:nowrap;}
+.topbar-logo span{color:var(--accent2);}
+.topbar-name{font-size:13px;color:var(--text2);font-weight:600;white-space:nowrap;background:var(--surface2);padding:4px 12px;border-radius:20px;border:1px solid var(--border);}
+.topbar-tabs{display:flex;gap:2px;flex:1;flex-wrap:wrap;}
+.tab-btn{background:none;border:none;color:var(--text2);font-family:'Segoe UI',Arial,sans-serif;font-size:13px;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.tab-btn:hover{background:var(--surface2);color:var(--text);}
+.tab-btn.active{background:var(--accent);color:#fff;}
+.topbar-actions{display:flex;gap:6px;}
+
+/* MAIN */
+.main{padding:24px;max-width:1400px;margin:0 auto;}
+.section{display:none;}
+.section.active{display:block;}
+
+/* CARDS */
+.cards-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.1);}
+.stat-card .label{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.stat-card .value{font-size:24px;font-weight:800;}
+.stat-card.blue .value{color:var(--accent);}
+.stat-card.green .value{color:var(--accent2);}
+.stat-card.yellow .value{color:var(--accent3);}
+.stat-card.red .value{color:var(--danger);}
+.stat-card.purple .value{color:var(--purple);}
+
+/* PANEL */
+.panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:var(--shadow);}
+.panel-title{font-size:15px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;gap:10px;color:var(--text);}
+.panel-title .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:14px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.form-group input,.form-group select,.form-group textarea{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:9px 12px;outline:none;transition:border .18s;direction:rtl;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);background:#fff;}
+
+/* BUTTONS */
+.btn{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#1d4ed8;}
+.btn-success{background:var(--accent2);color:#fff;}
+.btn-success:hover{background:#047857;}
+.btn-warning{background:var(--accent3);color:#fff;}
+.btn-warning:hover{background:#b45309;}
+.btn-danger{background:transparent;border:1.5px solid var(--danger);color:var(--danger);padding:5px 10px;font-size:11px;}
+.btn-danger:hover{background:var(--danger);color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.btn-purple{background:var(--purple);color:#fff;}
+.btn-purple:hover{background:#6d28d9;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:var(--surface2);color:var(--text2);font-weight:700;padding:10px 12px;text-align:right;border-bottom:1.5px solid var(--border);white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(37,99,235,.03);}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-blue{background:rgba(37,99,235,.1);color:var(--accent);}
+.badge-green{background:rgba(5,150,105,.1);color:var(--accent2);}
+.badge-yellow{background:rgba(217,119,6,.1);color:var(--accent3);}
+.badge-purple{background:rgba(124,58,237,.1);color:var(--purple);}
+.badge-red{background:rgba(220,38,38,.1);color:var(--danger);}
+.badge-gray{background:rgba(100,116,139,.1);color:var(--text2);}
+
+/* MONTH SELECTOR */
+.month-selector{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.month-selector select{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:13px;padding:7px 12px;outline:none;direction:rtl;}
+.month-selector label{font-size:12px;color:var(--text2);font-weight:700;}
+
+/* TODAY BAR */
+.today-bar{background:linear-gradient(135deg,#eff6ff,#ecfdf5);border:1.5px solid #bfdbfe;border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.today-info .date{font-size:16px;font-weight:800;color:var(--text);}
+.today-info .time{font-size:13px;color:var(--text2);}
+.today-btns{display:flex;gap:8px;}
+
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:18px;margin-bottom:20px;}
+.chart-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--text2);}
+.chart-wrap{position:relative;height:220px;}
+
+/* SETTINGS */
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:12px;}
+.setting-row:last-child{border-bottom:none;}
+.setting-label{font-size:14px;font-weight:600;}
+.setting-sub{font-size:12px;color:var(--text2);}
+.setting-input{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:7px 12px;outline:none;width:130px;text-align:center;direction:ltr;}
+.setting-input:focus{border-color:var(--accent);}
+
+/* REFERRER */
+.ref-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.ref-item{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;}
+.ref-item input{background:transparent;border:none;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;flex:1;outline:none;}
+
+/* ALERT */
+.alert{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 16px;font-size:13px;color:#92400e;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+/* PROGRESS BAR */
+.progress-wrap{background:var(--surface2);border-radius:20px;height:10px;overflow:hidden;margin-top:6px;}
+.progress-bar{height:100%;border-radius:20px;transition:width .4s;}
+.progress-green{background:var(--accent2);}
+.progress-yellow{background:var(--accent3);}
+.progress-red{background:var(--danger);}
+
+/* TABS INNER */
+.inner-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface2);padding:5px;border-radius:10px;border:1.5px solid var(--border);width:fit-content;}
+.inner-tab{background:none;border:none;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;font-weight:600;padding:7px 16px;border-radius:7px;cursor:pointer;color:var(--text2);transition:all .18s;}
+.inner-tab.active{background:var(--surface);color:var(--accent);box-shadow:var(--shadow);}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent2);color:#fff;font-family:'Segoe UI',Arial,sans-serif;font-weight:700;font-size:14px;padding:11px 26px;border-radius:40px;z-index:9998;transition:transform .3s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* IMPORT PREVIEW */
+.import-preview{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:16px;margin-top:14px;max-height:300px;overflow-y:auto;}
+
+/* GOAL CARD */
+.goal-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;box-shadow:var(--shadow);}
+.goal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.goal-title{font-size:15px;font-weight:700;}
+.goal-meta{font-size:12px;color:var(--text2);margin-bottom:8px;}
+.goal-amount{font-size:13px;font-weight:600;margin-bottom:6px;}
+.goal-type-label{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;padding:3px 0;color:var(--text);}
+.goal-type-label input[type=checkbox]{cursor:pointer;accent-color:var(--purple);width:14px;height:14px;}
+.goal-body{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin-top:14px;}
+.goal-chart-wrap{flex-shrink:0;width:180px;height:180px;position:relative;}
+.goal-stats{flex:1;min-width:200px;}
+.goal-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.goal-mini-stat{background:var(--surface2);border-radius:8px;padding:10px;text-align:center;}
+.goal-mini-label{font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.goal-mini-value{font-size:17px;font-weight:800;margin-top:2px;}
+/* DAILY GOAL */
+.dg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;}
+.dg-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:13px 14px;text-align:center;box-shadow:var(--shadow);}
+.dg-label{font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.dg-value{font-size:20px;font-weight:900;margin-top:4px;}
+.dg-sub{font-size:10px;color:var(--text3);margin-top:2px;}
+.dg-today-bar{background:linear-gradient(135deg,#ecfdf5,#eff6ff);border:1.5px solid #6ee7b7;border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.dg-today-main{font-size:28px;font-weight:900;}
+.dg-status-ok{color:var(--accent2);}
+.dg-status-warn{color:var(--accent3);}
+.dg-status-bad{color:var(--danger);}
+
+/* MOBILE */
+@media(max-width:640px){
+  .topbar{height:auto;padding:10px 14px;}
+  .topbar-tabs{order:3;width:100%;overflow-x:auto;padding-bottom:4px;flex-wrap:nowrap;}
+  .main{padding:14px;}
+  .cards-row{grid-template-columns:repeat(2,1fr);}
+  .charts-grid{grid-template-columns:1fr;}
+  .form-grid{grid-template-columns:1fr;}
+  .today-bar{flex-direction:column;align-items:flex-start;}
+}
+
+/* PRINT */
+@media print{
+  .topbar,.no-print,.today-bar{display:none!important;}
+  body{background:#fff;}
+  .panel,.stat-card{box-shadow:none;border:1px solid #dde3ed;}
+  .print-hide{display:none!important;}
+}
+
+/* CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px;}
+.cal-header-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
+.cal-header-day{text-align:center;font-size:11px;font-weight:700;color:var(--text2);padding:4px 0;}
+.cal-day{min-height:60px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1.5px solid transparent;transition:all .15s;position:relative;font-size:13px;font-weight:600;}
+.cal-day:hover{border-color:var(--accent);transform:scale(1.03);}
+.cal-day.empty{background:transparent;cursor:default;pointer-events:none;}
+.cal-day.work{background:#dcfce7;color:#166534;}
+.cal-day.work-late{background:#fef9c3;color:#854d0e;}
+.cal-day.abs-custom{background:#ede9fe;color:#4c1d95;}
+.cal-day.abs-חופשה{background:#ede9fe;color:#4c1d95;}
+.cal-day.abs-חג{background:#fef3c7;color:#78350f;}
+.cal-day.abs-מחלה{background:#fee2e2;color:#991b1b;}
+.cal-day.missing{background:#f1f5f9;color:#94a3b8;border:1.5px dashed #cbd5e1;}
+.cal-day.weekend{background:#f8fafc;color:#cbd5e1;cursor:default;pointer-events:none;}
+.cal-day.today-highlight{outline:2.5px solid var(--accent);outline-offset:1px;}
+.cal-num{font-size:14px;font-weight:800;}
+.cal-icon{font-size:11px;margin-top:2px;}
+.cal-info{font-size:9px;color:inherit;opacity:.8;}
+.cal-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--text2);}
+.cal-legend-item{display:flex;align-items:center;gap:4px;}
+.cal-legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+.view-toggle{display:flex;gap:6px;margin-bottom:14px;}
+
+/* FORECAST */
+.forecast-card{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid #bfdbfe;border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;}
+.forecast-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;}
+.forecast-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;}
+.f-item{text-align:center;padding:8px;border-radius:8px;background:rgba(255,255,255,.6);}
+.f-label{font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;}
+.f-value{font-size:18px;font-weight:800;color:var(--text);}
+.f-sub{font-size:9px;color:var(--text3);}
+
+/* ACHIEVEMENTS */
+.achievements-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;min-height:0;}
+.achievement{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:7px 14px;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;box-shadow:var(--shadow);}
+.ach-gold{border-color:#f59e0b;background:#fffbeb;color:#92400e;}
+.ach-green{border-color:var(--accent2);background:#f0fdf4;color:#065f46;}
+.ach-blue{border-color:var(--accent);background:#eff6ff;color:#1e40af;}
+
+/* AI SUMMARY */
+.ai-box{background:linear-gradient(135deg,#faf5ff,#f0f9ff);border:1.5px solid #c4b5fd;border-radius:var(--radius);padding:20px;margin-top:16px;}
+.ai-title{font-size:14px;font-weight:700;color:var(--purple);margin-bottom:10px;}
+.ai-text{font-size:14px;line-height:1.8;color:var(--text);white-space:pre-line;}
+.ai-dot{display:inline-block;width:7px;height:7px;background:var(--purple);border-radius:50%;animation:blink .8s infinite;margin-right:4px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- LOCK -->
+<div id="lockscreen">
+  <div class="lock-logo">שכר<span>Pro</span></div>
+  <div class="lock-box">
+    <h3>הכנס סיסמה</h3>
+    <input type="password" id="pin-input" placeholder="••••" maxlength="20" onkeydown="if(event.key==='Enter')checkPin()">
+    <button class="btn btn-primary" style="width:100%" onclick="checkPin()">כניסה</button>
+    <div class="lock-err" id="pin-err"></div>
+    <div class="lock-hint">סיסמה ברירת מחדל: 1234</div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">שכר<span>Pro</span></div>
+  <div class="topbar-name" id="topbar-name">שלמי</div>
+  <div class="topbar-tabs">
+    <button class="tab-btn active" onclick="showTab('attendance',this)">⏱ נוכחות</button>
+    <button class="tab-btn" onclick="showTab('bonuses',this)">💰 בונוסים</button>
+    <button class="tab-btn" onclick="showTab('reports',this)">📊 דוחות</button>
+    <button class="tab-btn" onclick="showTab('goals',this)">🎯 יעדים</button>
+    <button class="tab-btn" onclick="showTab('settings',this)">⚙️ הגדרות</button>
+  </div>
+  <div class="topbar-actions no-print">
+    <button class="btn btn-ghost btn-sm" onclick="backupData()">💾 גיבוי</button>
+    <label class="btn btn-ghost btn-sm" style="cursor:pointer">📂 שחזור<input type="file" accept=".json" onchange="restoreData(event)" style="display:none"></label>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">🔒</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ===== ATTENDANCE ===== -->
+<div class="section active" id="tab-attendance">
+  <div class="today-bar no-print">
+    <div class="today-info">
+      <div class="date" id="today-date"></div>
+      <div class="time" id="today-time"></div>
+    </div>
+    <div class="today-btns">
+      <button class="btn btn-primary" onclick="clockIn()">▶ התחל יום</button>
+      <button class="btn btn-success" onclick="clockOut()">⏹ סיים יום</button>
+    </div>
+  </div>
+  <div id="missing-alert"></div>
+  <div class="achievements-wrap no-print" id="achievements-wrap"></div>
+  <div class="month-selector no-print">
+    <label>חודש:</label>
+    <select id="att-month" onchange="renderAttendance()"></select>
+    <select id="att-year" onchange="renderAttendance()"></select>
+  </div>
+  <div class="cards-row">
+    <div class="stat-card blue"><div class="label">ימי עבודה</div><div class="value" id="s-days">0</div></div>
+    <div class="stat-card green"><div class="label">שעות</div><div class="value" id="s-hours">0</div></div>
+    <div class="stat-card yellow"><div class="label">שכר בסיס</div><div class="value" id="s-base">₪0</div></div>
+    <div class="stat-card purple"><div class="label">היעדרויות</div><div class="value" id="s-absences">0</div></div>
+  </div>
+
+  <!-- תחזית -->
+  <div id="forecast-card" class="forecast-card no-print" style="display:none;"></div>
+
+  <!-- מתג תצוגה -->
+  <div class="view-toggle no-print">
+    <button class="btn btn-primary btn-sm" id="view-cal-btn" onclick="switchView('calendar')">📅 לוח שנה</button>
+    <button class="btn btn-ghost btn-sm" id="view-table-btn" onclick="switchView('table')">📋 טבלה</button>
+  </div>
+
+  <!-- טאבים פנימיים -->
+  <div style="display:flex;gap:4px;margin-bottom:16px;">
+    <button class="btn btn-primary btn-sm" id="att-tab-work" onclick="switchAttTab('work')">⏱ יום עבודה</button>
+    <button class="btn btn-ghost btn-sm" id="att-tab-absence" onclick="switchAttTab('absence')">🏖️ היעדרות</button>
+  </div>
+
+  <!-- טופס יום עבודה -->
+  <div id="att-form-work" class="panel">
+    <div class="panel-title"><div class="dot"></div> הוספת / עריכת יום עבודה</div>
+    <div class="form-grid">
+      <div class="form-group"><label>תאריך</label><input type="date" id="att-date"></div>
+      <div class="form-group"><label>שעת כניסה</label><input type="time" id="att-in" value="10:00"></div>
+      <div class="form-group"><label>שעת יציאה</label><input type="time" id="att-out" value="17:00"></div>
+      <div class="form-group"><label>הערות</label><input type="text" id="att-note" placeholder="אופציונלי..."></div>
+    </div>
+    <!-- הפסקות -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--text2);font-weight:700;margin-bottom:8px;">☕ הפסקות (אופציונלי)</div>
+      <div id="breaks-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addBreak()" style="margin-top:6px;">+ הוסף הפסקה</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="saveAttendance()">שמור יום</button>
+      <span id="att-hours-preview" style="font-size:13px;color:var(--accent2);font-weight:700;"></span>
+    </div>
+  </div>
+
+  <!-- טופס היעדרות -->
+  <div id="att-form-absence" class="panel" style="display:none;border-color:var(--purple);">
+    <div class="panel-title"><div class="dot" style="background:var(--purple)"></div> הוספת היעדרות</div>
+    <div class="form-grid">
+      <div class="form-group"><label>תאריך</label><input type="date" id="abs-date"></div>
+      <div class="form-group"><label>סוג היעדרות</label>
+        <select id="abs-type"></select>
+      </div>
+      <div class="form-group"><label>הערות</label><input type="text" id="abs-note" placeholder="אופציונלי..."></div>
+      <div class="form-group" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn btn-purple" onclick="saveAbsence()">שמור היעדרות</button></div>
+    </div>
+  </div>
+
+  <!-- פאנל עריכת היעדרות -->
+  <div id="edit-absence-panel" class="panel" style="display:none;border-color:var(--purple);">
+    <div class="panel-title"><div class="dot" style="background:var(--purple)"></div> עריכת היעדרות</div>
+    <div class="form-grid">
+      <div class="form-group"><label>תאריך</label><input type="date" id="edit-abs-date"></div>
+      <div class="form-group"><label>סוג היעדרות</label>
+        <select id="edit-abs-type"></select>
+      </div>
+      <div class="form-group"><label>הערות</label><input type="text" id="edit-abs-note"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-warning" onclick="saveEditAbsence()">שמור עריכה</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('edit-absence-panel').style.display='none'">ביטול</button>
+    </div>
+    <input type="hidden" id="edit-abs-date-orig">
+  </div>
+
+  <!-- לוח שנה -->
+  <div class="panel" id="panel-calendar">
+    <div class="panel-title"><div class="dot" style="background:var(--accent2)"></div> לוח שנה</div>
+    <div id="calendar-container"></div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#dcfce7"></div> עבודה</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#fef9c3"></div> איחור</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#ede9fe"></div> חופשה</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#fef3c7"></div> חג</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#fee2e2"></div> מחלה</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#f1f5f9;border:1px dashed #94a3b8"></div> לא הוזן</div>
+    </div>
+  </div>
+
+  <!-- טבלה -->
+  <div class="panel" id="panel-table" style="display:none;">
+    <div class="panel-title"><div class="dot" style="background:var(--accent2)"></div> ימים שהוזנו</div>
+    <div id="tardiness-summary"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>תאריך</th><th>יום</th><th>סוג</th><th>כניסה</th><th>יציאה</th><th>שעות</th><th>שכר</th><th>הערות</th><th></th></tr></thead>
+        <tbody id="att-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BONUSES ===== -->
+<div class="section" id="tab-bonuses">
+  <div class="month-selector no-print">
+    <label>חודש:</label>
+    <select id="bon-month" onchange="renderBonuses()"></select>
+    <select id="bon-year" onchange="renderBonuses()"></select>
+    <select id="bon-status-filter" onchange="renderBonuses()">
+      <option value="all">כל הסטטוסים</option>
+      <option value="סגור">סגור</option>
+      <option value="ממתין">ממתין</option>
+      <option value="בוטל">בוטל</option>
+    </select>
+  </div>
+  <div class="cards-row">
+    <div class="stat-card green"><div class="label">סה"כ בונוסים</div><div class="value" id="b-total">₪0</div></div>
+    <div class="stat-card blue"><div class="label">עסקאות</div><div class="value" id="b-count">0</div></div>
+    <div class="stat-card yellow"><div class="label">ממתינים</div><div class="value" id="b-pending">0</div></div>
+    <div class="stat-card purple"><div class="label">בונוסים לתאריך <input type="date" id="bon-today-date" onchange="renderBonuses()" style="font-size:10px;border:none;background:transparent;color:var(--purple);font-family:'Segoe UI',Arial,sans-serif;cursor:pointer;width:110px;"></div><div class="value" id="b-today">₪0</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title"><div class="dot" style="background:var(--accent3)"></div> הוספת בונוס</div>
+    <div class="form-grid">
+      <div class="form-group"><label>תאריך</label><input type="date" id="bon-date"></div>
+      <div class="form-group"><label>שם לקוח</label><input type="text" id="bon-client" placeholder="שם הלקוח"></div>
+      <div class="form-group"><label>סוג בונוס</label><select id="bon-type" onchange="updateBonusPreview()"></select></div>
+      <div class="form-group"><label>סכום עסקה (₪)</label><input type="number" id="bon-amount" placeholder="0" oninput="updateBonusPreview()"></div>
+      <div class="form-group"><label>גורם מפנה</label><select id="bon-referrer"></select></div>
+      <div class="form-group"><label>סטטוס</label>
+        <select id="bon-status"><option value="סגור">סגור</option><option value="ממתין">ממתין</option><option value="בוטל">בוטל</option></select>
+      </div>
+      <div class="form-group"><label>תגמול מחושב</label><input type="text" id="bon-preview" readonly style="color:var(--accent2);font-weight:700;"></div>
+      <div class="form-group"><label>הערות</label><input type="text" id="bon-note" placeholder="אופציונלי..."></div>
+    </div>
+    <button class="btn btn-success" onclick="saveBonus()">הוסף בונוס</button>
+  </div>
+  <div class="panel" id="edit-bonus-panel" style="display:none;border-color:var(--accent3);">
+    <div class="panel-title"><div class="dot" style="background:var(--accent3)"></div> עריכת בונוס</div>
+    <div class="form-grid">
+      <div class="form-group"><label>תאריך</label><input type="date" id="edit-bon-date"></div>
+      <div class="form-group"><label>שם לקוח</label><input type="text" id="edit-bon-client"></div>
+      <div class="form-group"><label>סוג בונוס</label><select id="edit-bon-type" onchange="updateEditBonusPreview()"></select></div>
+      <div class="form-group"><label>סכום עסקה (₪)</label><input type="number" id="edit-bon-amount" oninput="updateEditBonusPreview()"></div>
+      <div class="form-group"><label>גורם מפנה</label><select id="edit-bon-referrer"></select></div>
+      <div class="form-group"><label>סטטוס</label>
+        <select id="edit-bon-status"><option value="סגור">סגור</option><option value="ממתין">ממתין</option><option value="בוטל">בוטל</option></select>
+      </div>
+      <div class="form-group"><label>תגמול מחושב</label><input type="text" id="edit-bon-preview" readonly style="color:var(--accent2);font-weight:700;"></div>
+      <div class="form-group"><label>הערות</label><input type="text" id="edit-bon-note"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-warning" onclick="saveEditBonus()">שמור עריכה</button>
+      <button class="btn btn-ghost" onclick="cancelEditBonus()">ביטול</button>
+    </div>
+    <input type="hidden" id="edit-bon-id">
+  </div>
+  <div class="panel">
+    <div class="panel-title"><div class="dot" style="background:var(--accent2)"></div> בונוסים שהוזנו</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>תאריך</th><th>לקוח</th><th>סוג</th><th>סכום עסקה</th><th>תגמול</th><th>גורם מפנה</th><th>סטטוס</th><th>הערות</th><th></th></tr></thead>
+        <tbody id="bon-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REPORTS ===== -->
+<div class="section" id="tab-reports">
+  <div class="inner-tabs no-print">
+    <button class="inner-tab active" onclick="showInnerReport('monthly',this)">📅 דוח חודשי</button>
+    <button class="inner-tab" onclick="showInnerReport('annual',this)">📊 דוח שנתי + גרפים</button>
+    <button class="inner-tab" onclick="showInnerReport('leads',this)">👥 לידים</button>
+  </div>
+
+  <!-- Monthly -->
+  <div id="inner-monthly">
+    <div class="month-selector no-print">
+      <label>חודש:</label>
+      <select id="rep-month" onchange="renderMonthlyReport()"></select>
+      <select id="rep-year" onchange="renderMonthlyReport()"></select>
+      <select id="rep-view" onchange="renderMonthlyReport()">
+        <option value="full">סיכום מלא (עם פירוט)</option>
+        <option value="summary">סיכום בלבד (ללא פירוט)</option>
+        <option value="hours">שעות בלבד</option>
+        <option value="bonuses">בונוסים בלבד</option>
+      </select>
+      <select id="rep-print-mode" class="no-print">
+        <option value="full">הדפס הכל</option>
+        <option value="no-bonuses">הדפס ללא בונוסים</option>
+      </select>
+      <button class="btn btn-ghost btn-sm no-print" onclick="printReport()">🖨 הדפס</button>
+      <button class="btn btn-success btn-sm no-print" onclick="exportMonthlyExcel()">📥 אקסל</button>
+      <button class="btn btn-sm no-print" style="background:#25d366;color:#fff;font-weight:700;" onclick="shareWhatsApp()">💬 WhatsApp</button>
+      <button class="btn btn-purple btn-sm no-print" onclick="generateAISummary()">🤖 AI סיכום</button>
+    </div>
+    <div id="monthly-report-content"></div>
+    <div id="ai-summary-container"></div>
+  </div>
+
+  <!-- Annual -->
+  <div id="inner-annual" style="display:none">
+    <div class="month-selector no-print">
+      <label>שנה:</label>
+      <select id="ann-year" onchange="renderAnnualReport()"></select>
+      <button class="btn btn-ghost btn-sm no-print" onclick="window.print()">🖨 הדפס</button>
+      <button class="btn btn-success btn-sm no-print" onclick="exportAnnualExcel()">📥 אקסל</button>
+    </div>
+    <div id="annual-report-content"></div>
+    <div class="charts-grid" id="annual-charts" style="margin-top:20px;"></div>
+  </div>
+
+  <!-- Leads -->
+  <div id="inner-leads" style="display:none">
+    <div class="month-selector no-print">
+      <label>תצוגה:</label>
+      <select id="leads-scope" onchange="toggleLeadsScope()">
+        <option value="month">חודש ספציפי</option>
+        <option value="year">שנה מלאה</option>
+      </select>
+      <select id="leads-month"></select>
+      <select id="leads-year"></select>
+      <select id="leads-owner">
+        <option value="all">כל הלידים</option>
+      </select>
+    </div>
+    <div class="month-selector no-print" style="margin-top:-10px;">
+      <label>חיפוש:</label>
+      <select id="leads-client-filter">
+        <option value="all">כל הלקוחות</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="renderLeads()">הצג</button>
+    </div>
+    <div id="leads-content"></div>
+  </div>
+</div>
+
+<!-- ===== GOALS ===== -->
+<div class="section" id="tab-goals">
+
+  <!-- יעד יומי -->
+  <div class="panel" style="border-color:var(--accent2);background:linear-gradient(135deg,#f0fdf4,#fff);">
+    <div class="panel-title"><div class="dot" style="background:var(--accent2)"></div> יעד יומי 🎯</div>
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+      <div class="form-group" style="flex:1;min-width:180px;">
+        <label>יעד חודשי כולל (₪)</label>
+        <input type="number" id="daily-goal-target" placeholder="13000" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:9px 12px;outline:none;width:100%;">
+      </div>
+      <div class="form-group" style="flex:1;min-width:180px;">
+        <label>כולל שכר בסיס?</label>
+        <select id="daily-goal-include-base" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:9px 12px;outline:none;width:100%;direction:rtl;">
+          <option value="yes">כן – יעד כולל שכר בסיס + בונוסים</option>
+          <option value="no">לא – יעד לבונוסים בלבד</option>
+        </select>
+      </div>
+      <button class="btn btn-success" onclick="saveDailyGoal()">שמור יעד</button>
+    </div>
+    <div id="daily-goal-display"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title"><div class="dot" style="background:var(--purple)"></div> הוספת יעד חדש</div>
+    <div class="form-grid">
+      <div class="form-group"><label>שם היעד</label><input type="text" id="goal-name" placeholder="תאר את היעד..."></div>
+      <div class="form-group"><label>סוגי בונוס</label>
+        <div id="goal-type-list" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;"></div>
+      </div>
+      <div class="form-group"><label>מה למדוד</label>
+        <select id="goal-track-by" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:9px 12px;outline:none;direction:rtl;">
+          <option value="amount">סכום עסקה (כמה הלקוח הפקיד)</option>
+          <option value="reward">תגמול (כמה אני מקבל)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>סכום יעד (₪)</label><input type="number" id="goal-target" placeholder="0"></div>
+      <div class="form-group"><label>מתאריך</label><input type="date" id="goal-from"></div>
+      <div class="form-group"><label>עד תאריך</label><input type="date" id="goal-to"></div>
+    </div>
+    <button class="btn btn-purple" onclick="saveGoal()">הוסף יעד</button>
+  </div>
+  <div id="goals-list"></div>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+<div class="section" id="tab-settings">
+  <div class="settings-grid">
+    <div class="panel">
+      <div class="panel-title"><div class="dot" style="background:var(--accent3)"></div> הגדרות כלליות</div>
+      <div class="setting-row">
+        <div><div class="setting-label">שם עובד</div><div class="setting-sub">מוצג בסרגל ובדוחות</div></div>
+        <input class="setting-input" id="set-name" type="text" style="width:140px;text-align:right;" placeholder="שלמי">
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">שכר לשעה (₪)</div><div class="setting-sub">לשינוי – בחר טווח</div></div>
+        <input class="setting-input" id="set-hourly" type="number" min="1">
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">החל שינוי שכר על</div><div class="setting-sub">מתאים גם לתגמולים</div></div>
+        <select class="setting-input" id="set-hourly-scope" style="width:140px;direction:rtl;">
+          <option value="future">מהיום והלאה</option>
+          <option value="month">חודש ספציפי</option>
+          <option value="all">הכל (כולל עבר)</option>
+        </select>
+      </div>
+      <div id="set-month-row" style="display:none" class="setting-row">
+        <div><div class="setting-label">חודש ספציפי</div></div>
+        <div style="display:flex;gap:6px;">
+          <select class="setting-input" id="set-scope-month" style="width:90px;direction:rtl;"></select>
+          <select class="setting-input" id="set-scope-year" style="width:80px;direction:rtl;"></select>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">שעת התחלה רגילה</div><div class="setting-sub">לחישוב איחורים</div></div>
+        <input class="setting-input" id="set-start-time" type="time" value="10:00">
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">שעת סיום רגילה</div><div class="setting-sub">לחישוב יציאות מוקדמות/מאוחרות</div></div>
+        <input class="setting-input" id="set-end-time" type="time" value="17:00">
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">סיסמת כניסה</div><div class="setting-sub">השאר ריק לאי-שינוי</div></div>
+        <input class="setting-input" id="set-pin" type="password" placeholder="חדשה...">
+      </div>
+      <div style="margin-top:16px;"><button class="btn btn-primary" onclick="saveGeneralSettings()">שמור הגדרות</button></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><div class="dot" style="background:var(--accent2)"></div> תגמולי בונוסים</div>
+      <div class="setting-row" style="padding-top:0">
+        <div><div class="setting-label">החל שינוי על</div></div>
+        <select class="setting-input" id="set-bonus-scope" style="width:140px;direction:rtl;" onchange="toggleBonusScopeMonth()">
+          <option value="future">מהיום והלאה</option>
+          <option value="month">חודש ספציפי</option>
+          <option value="all">הכל</option>
+        </select>
+      </div>
+      <div id="bonus-month-row" style="display:none" class="setting-row">
+        <div><div class="setting-label">חודש ספציפי</div></div>
+        <div style="display:flex;gap:6px;">
+          <select class="setting-input" id="set-bonus-month" style="width:90px;direction:rtl;"></select>
+          <select class="setting-input" id="set-bonus-year" style="width:80px;direction:rtl;"></select>
+        </div>
+      </div>
+      <div id="bonus-settings-list" style="margin-top:8px;"></div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div style="font-size:12px;color:var(--text2);font-weight:700;margin-bottom:10px;">➕ הוספת סוג בונוס חדש</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="form-group" style="flex:2;min-width:120px;"><label>שם הבונוס</label><input type="text" id="new-bonus-label" placeholder="שם הבונוס..." style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:8px 12px;outline:none;width:100%;"></div>
+          <div class="form-group" style="flex:1;min-width:80px;"><label>שיעור</label><input type="number" id="new-bonus-rate" placeholder="0.1" step="0.001" min="0" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:8px 12px;outline:none;width:100%;direction:ltr;"></div>
+          <div class="form-group" style="flex:1;min-width:100px;"><label>סוג</label><select id="new-bonus-type" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:8px 12px;outline:none;width:100%;direction:rtl;"><option value="percent">אחוז (%)</option><option value="multiply">מכפיל (×)</option></select></div>
+          <button class="btn btn-success btn-sm" onclick="addBonusType()" style="height:38px;">הוסף</button>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="saveBonusSettings()">שמור תגמולים</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><div class="dot" style="background:var(--purple)"></div> ניהול גורמי מפנה</div>
+      <div class="ref-list" id="ref-list"></div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="new-ref-input" placeholder="שם חדש..." style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:8px 12px;outline:none;flex:1;">
+        <button class="btn btn-primary" onclick="addReferrer()">הוסף</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><div class="dot" style="background:var(--danger)"></div> ניהול סוגי היעדרות</div>
+      <div class="ref-list" id="abs-types-list"></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <input type="text" id="new-abs-type-icon" placeholder="😷" maxlength="2" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:20px;padding:6px 10px;outline:none;width:54px;text-align:center;">
+        <input type="text" id="new-abs-type-name" placeholder="שם סוג היעדרות..." style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:8px 12px;outline:none;flex:1;">
+        <input type="color" id="new-abs-type-color" value="#e0f2fe" title="צבע רקע" style="width:38px;height:38px;border:none;border-radius:8px;cursor:pointer;padding:2px;">
+        <button class="btn btn-primary" onclick="addAbsenceType()">הוסף</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><div class="dot" style="background:var(--accent3)"></div> ייבוא מאקסל</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">העלה קובץ Excel עם נתוני נוכחות או בונוסים. לאחר הייבוא תוכל לערוך לפני שמירה.</p>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <label class="btn btn-primary" style="cursor:pointer">📂 ייבוא נוכחות<input type="file" accept=".xlsx,.xls" onchange="importAttendanceExcel(event)" style="display:none"></label>
+        <label class="btn btn-success" style="cursor:pointer">📂 ייבוא בונוסים<input type="file" accept=".xlsx,.xls" onchange="importBonusExcel(event)" style="display:none"></label>
+      </div>
+      <div id="import-preview"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== CONSTANTS =====================
+const MONTHS_HE=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const DAYS_HE=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const DEFAULT_HOURLY=35,DEFAULT_PIN='1234',DEFAULT_NAME='שלמי';
+const DEFAULT_BONUS_TYPES=[
+  {key:'הפקדה',label:'הפקדה',rate:0.1,rateType:'percent'},
+  {key:'גמל/השתלמות',label:'גמל / השתלמות',rate:0.003,rateType:'percent'},
+  {key:'מטריה',label:'מטריה',rate:2,rateType:'multiply'},
+  {key:'חיסכון',label:'חיסכון',rate:0.003,rateType:'percent'},
+  {key:'ביטוח חיים',label:'ביטוח חיים',rate:1.5,rateType:'multiply'},
+  {key:'סליקה',label:'סליקה',rate:0.003,rateType:'percent'},
+  {key:'בונוס חפ',label:'בונוס ח"פ',rate:1,rateType:'multiply'},
+];
+const DEFAULT_REFERRERS=['שלוימי','שמוליק','יהודה','זאבי','בני','ליבי','שרי','פייגי','משרד'];
+const MY_REFERRER='משרד';
+const DEFAULT_ABSENCE_TYPES=[
+  {name:'חופשה',icon:'🏖️',color:'#ede9fe',textColor:'#4c1d95'},
+  {name:'חג',icon:'✡️',color:'#fef3c7',textColor:'#78350f'},
+  {name:'מחלה',icon:'🤒',color:'#fee2e2',textColor:'#991b1b'},
+];
+function getAbsenceTypes(){return gl('absenceTypes',DEFAULT_ABSENCE_TYPES);}
+
+// ===================== STORAGE =====================
+const _s={};
+function gd(k){if(_s[k]!==undefined)return _s[k];try{const v=localStorage.getItem(k);_s[k]=v?JSON.parse(v):null;}catch{_s[k]=null;}return _s[k];}
+function sd(k,v){_s[k]=v;try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+function gl(k,d){const v=gd(k);return Array.isArray(v)?v:d;}
+function gs(k,d){const v=gd(k);return(v!==null&&v!==undefined)?v:d;}
+function getHourly(){return parseFloat(gs('hourly',DEFAULT_HOURLY))||DEFAULT_HOURLY;}
+function getPin(){return gs('pin',DEFAULT_PIN);}
+function getName(){return gs('workerName',DEFAULT_NAME);}
+function getBonusTypes(){return gl('bonusTypes',DEFAULT_BONUS_TYPES);}
+function getReferrers(){return gl('referrers',DEFAULT_REFERRERS);}
+function calcBonus(key,amount){const bt=getBonusTypes().find(b=>b.key===key);if(!bt)return 0;return parseFloat(amount||0)*bt.rate;}
+
+// ===================== LOCK =====================
+function checkPin(){
+  const v=document.getElementById('pin-input').value;
+  if(v===getPin()){document.getElementById('lockscreen').style.display='none';init();}
+  else{document.getElementById('pin-err').textContent='סיסמה שגויה';document.getElementById('pin-input').value='';}
+}
+function doLogout(){document.getElementById('lockscreen').style.display='flex';document.getElementById('pin-input').value='';document.getElementById('pin-err').textContent='';}
+
+// ===================== INIT =====================
+function init(){
+  initSelects();updateTopbar();renderAttendance();renderBonuses();renderGoals();
+  updateTodayBar();setInterval(updateTodayBar,1000);checkMissingDays();
+  initNotifications();
+}
+function updateTopbar(){document.getElementById('topbar-name').textContent=getName();}
+function initSelects(){
+  const now=new Date(),year=now.getFullYear();
+  const years=[];for(let y=year-3;y<=year+1;y++)years.push(y);
+  const mOpts=MONTHS_HE.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  const yOpts=years.map(y=>`<option value="${y}"${y===year?' selected':''}>${y}</option>`).join('');
+  ['att-month','bon-month','rep-month','leads-month'].forEach(id=>{const el=document.getElementById(id);if(el){el.innerHTML=mOpts;el.value=now.getMonth();}});
+  ['att-year','bon-year','rep-year','ann-year','leads-year','chart-year'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=yOpts;});
+  const scopeM=['set-scope-month','set-bonus-month'];
+  scopeM.forEach(id=>{const el=document.getElementById(id);if(el){el.innerHTML=mOpts;el.value=now.getMonth();}});
+  const scopeY=['set-scope-year','set-bonus-year'];
+  scopeY.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=yOpts;});
+  const today=now.toISOString().split('T')[0];
+  document.getElementById('att-date').value=today;
+  document.getElementById('bon-date').value=today;
+  document.getElementById('abs-date').value=today;
+  const bonToday=document.getElementById('bon-today-date');
+  if(bonToday)bonToday.value=today;
+  populateBonusSelects();populateReferrerSelects();populateAbsenceSelects();populateGoalTypeSelect();
+}
+function populateBonusSelects(){
+  const opts=getBonusTypes().map(bt=>`<option value="${bt.key}">${bt.label} (${bt.rateType==='percent'?(bt.rate*100)+'%':'×'+bt.rate})</option>`).join('');
+  ['bon-type','edit-bon-type','goal-type'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+}
+function populateAbsenceSelects(){
+  const opts=getAbsenceTypes().map(t=>`<option value="${t.name}">${t.icon} ${t.name}</option>`).join('');
+  ['abs-type','edit-abs-type'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+}
+function renderAbsTypesList(){
+  const types=getAbsenceTypes();
+  const el=document.getElementById('abs-types-list');
+  if(!el)return;
+  el.innerHTML=types.map((t,i)=>`
+    <div class="ref-item" style="background:${t.color||'#ede9fe'};border-color:${t.color||'#ede9fe'};">
+      <span style="font-size:20px;width:30px;text-align:center;">${t.icon}</span>
+      <input type="text" value="${t.name}" onchange="updateAbsenceType(${i},'name',this.value)"
+        style="background:transparent;border:none;color:${t.textColor||'#333'};font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:700;flex:1;outline:none;">
+      <input type="text" value="${t.icon}" onchange="updateAbsenceType(${i},'icon',this.value)"
+        style="background:transparent;border:none;color:${t.textColor||'#333'};font-size:18px;width:36px;text-align:center;outline:none;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span style="font-size:9px;color:${t.textColor||'#333'};opacity:.7;">רקע</span>
+        <input type="color" value="${t.color||'#ede9fe'}" onchange="updateAbsenceType(${i},'color',this.value)"
+          style="width:28px;height:24px;border:none;border-radius:4px;cursor:pointer;padding:0;">
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span style="font-size:9px;color:${t.textColor||'#333'};opacity:.7;">טקסט</span>
+        <input type="color" value="${t.textColor||'#333333'}" onchange="updateAbsenceType(${i},'textColor',this.value)"
+          style="width:28px;height:24px;border:none;border-radius:4px;cursor:pointer;padding:0;">
+      </div>
+      ${types.length>1?`<button class="btn btn-danger" onclick="deleteAbsenceType(${i})" style="flex-shrink:0;">✕</button>`:''}
+    </div>`).join('');
+}
+function updateAbsenceType(i,field,val){
+  const types=getAbsenceTypes();
+  types[i][field]=val;
+  sd('absenceTypes',types);
+  renderAbsTypesList();
+  populateAbsenceSelects();
+  renderCalendar();
+}
+function deleteAbsenceType(i){
+  if(!confirm('למחוק סוג היעדרות זה?'))return;
+  const types=getAbsenceTypes();
+  types.splice(i,1);
+  sd('absenceTypes',types);
+  renderAbsTypesList();
+  populateAbsenceSelects();
+  toast('✓ נמחק');
+}
+function addAbsenceType(){
+  const name=document.getElementById('new-abs-type-name').value.trim();
+  const icon=document.getElementById('new-abs-type-icon').value.trim()||'📅';
+  const color=document.getElementById('new-abs-type-color').value||'#e0f2fe';
+  if(!name){toast('נא להכניס שם');return;}
+  const types=getAbsenceTypes();
+  types.push({name,icon,color,textColor:'#1e3a5f'});
+  sd('absenceTypes',types);
+  document.getElementById('new-abs-type-name').value='';
+  document.getElementById('new-abs-type-icon').value='';
+  renderAbsTypesList();
+  populateAbsenceSelects();
+  toast('✓ סוג היעדרות נוסף');
+}
+function populateReferrerSelects(){
+  const opts=getReferrers().map(r=>`<option value="${r}">${r}</option>`).join('');
+  ['bon-referrer','edit-bon-referrer'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+}
+function populateGoalTypeSelect(){
+  const el=document.getElementById('goal-type-list');
+  if(!el)return;
+  const bts=getBonusTypes();
+  el.innerHTML=`<label class="goal-type-label"><input type="checkbox" value="all" id="goal-type-all" onchange="goalTypeAllToggle(this)"><span>כל הבונוסים</span></label>`
+    +bts.map(bt=>`<label class="goal-type-label"><input type="checkbox" value="${bt.key}" class="goal-type-cb"><span>${bt.label}</span></label>`).join('');
+}
+function goalTypeAllToggle(cb){
+  if(cb.checked) document.querySelectorAll('.goal-type-cb').forEach(c=>c.checked=false);
+}
+function getSelectedGoalTypes(){
+  const allCb=document.getElementById('goal-type-all');
+  if(allCb&&allCb.checked) return ['all'];
+  const checked=[...document.querySelectorAll('.goal-type-cb:checked')].map(c=>c.value);
+  return checked.length?checked:['all'];
+}
+
+// ===================== TODAY =====================
+function updateTodayBar(){
+  const now=new Date();
+  document.getElementById('today-date').textContent=`יום ${DAYS_HE[now.getDay()]}, ${now.toLocaleDateString('he-IL')}`;
+  document.getElementById('today-time').textContent=now.toLocaleTimeString('he-IL');
+}
+function clockIn(){const now=new Date();document.getElementById('att-date').value=now.toISOString().split('T')[0];document.getElementById('att-in').value=now.toTimeString().slice(0,5);toast('✓ שעת כניסה: '+now.toTimeString().slice(0,5));}
+function clockOut(){const now=new Date();document.getElementById('att-out').value=now.toTimeString().slice(0,5);toast('✓ שעת יציאה: '+now.toTimeString().slice(0,5));}
+function checkMissingDays(){
+  const now=new Date(),att=gl('attendance',[]),missing=[];
+  for(let i=6;i>=1;i--){const d=new Date(now);d.setDate(d.getDate()-i);if(d.getDay()===5||d.getDay()===6)continue;const ds=d.toISOString().split('T')[0];if(!att.find(a=>a.date===ds))missing.push(ds);}
+  const el=document.getElementById('missing-alert');
+  el.innerHTML=missing.length?`<div class="alert no-print">⚠️ ימים ללא נוכחות: ${missing.map(d=>d.slice(5)).join(', ')}</div>`:'';
+}
+
+// ===================== TABS =====================
+function showTab(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='attendance'){renderAttendance();checkMissingDays();}
+  if(name==='bonuses')renderBonuses();
+  if(name==='reports')renderMonthlyReport();
+  if(name==='goals'){renderGoals();renderDailyGoal();}
+  if(name==='settings')renderSettings();
+}
+function showInnerReport(name,btn){
+  ['monthly','annual','leads'].forEach(n=>{document.getElementById('inner-'+n).style.display=n===name?'block':'none';});
+  document.querySelectorAll('.inner-tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(name==='monthly')renderMonthlyReport();
+  if(name==='annual')renderAnnualReport();
+  if(name==='leads')renderLeads();
+}
+
+// ===================== HELPERS =====================
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+function calcHours(i,o){const[ih,im]=i.split(':').map(Number),[oh,om]=o.split(':').map(Number);return Math.max(0,(oh*60+om-ih*60-im)/60);}
+function fc(n){return '₪'+(n||0).toLocaleString('he-IL',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function statusBadge(s){const m={'סגור':'badge-green','ממתין':'badge-yellow','בוטל':'badge-red'};return`<span class="badge ${m[s]||'badge-gray'}">${s||''}</span>`;}
+
+// ===================== WORK DEFAULTS =====================
+function getWorkStart(){return gs('workStart','10:00');}
+function getWorkEnd(){return gs('workEnd','17:00');}
+function timeToMins(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function minsToStr(m){const h=Math.floor(Math.abs(m)/60),min=Math.abs(m)%60;return`${h}:${min.toString().padStart(2,'0')}`;}
+
+// ===================== BREAKS =====================
+let breaksList=[];
+function addBreak(){
+  const id=Date.now();
+  breaksList.push({id,out:'',back:''});
+  renderBreaksList();
+}
+function removeBreak(id){
+  breaksList=breaksList.filter(b=>b.id!==id);
+  renderBreaksList();
+}
+function renderBreaksList(){
+  const el=document.getElementById('breaks-list');
+  if(!el)return;
+  el.innerHTML=breaksList.map((b,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--text2);font-weight:600;">הפסקה ${i+1}:</span>
+      <div class="form-group" style="flex:1;min-width:120px;">
+        <label>יציאה</label>
+        <input type="time" value="${b.out}" onchange="updateBreak(${b.id},'out',this.value)" oninput="previewHours()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:8px 12px;outline:none;width:100%;">
+      </div>
+      <div class="form-group" style="flex:1;min-width:120px;">
+        <label>חזרה</label>
+        <input type="time" value="${b.back}" onchange="updateBreak(${b.id},'back',this.value)" oninput="previewHours()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:8px 12px;outline:none;width:100%;">
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeBreak(${b.id})" style="margin-top:18px;">✕</button>
+    </div>`).join('');
+  previewHours();
+}
+function updateBreak(id,field,val){
+  const b=breaksList.find(b=>b.id===id);if(b)b[field]=val;
+  previewHours();
+}
+function calcBreaksMins(){
+  return breaksList.reduce((s,b)=>{
+    if(!b.out||!b.back)return s;
+    const diff=timeToMins(b.back)-timeToMins(b.out);
+    return s+(diff>0?diff:0);
+  },0);
+}
+function previewHours(){
+  const inT=document.getElementById('att-in').value,outT=document.getElementById('att-out').value;
+  if(!inT||!outT)return;
+  const total=timeToMins(outT)-timeToMins(inT)-calcBreaksMins();
+  const el=document.getElementById('att-hours-preview');
+  if(el)el.textContent=total>0?`סה"כ: ${(total/60).toFixed(2)} שעות`:'';
+}
+
+// ===================== TARDINESS =====================
+function checkTardiness(inT,outT){
+  const ws=getWorkStart(),we=getWorkEnd();
+  const inDiff=timeToMins(inT)-timeToMins(ws); // חיובי = איחור
+  const outDiff=timeToMins(outT)-timeToMins(we); // חיובי = יציאה מאוחרת, שלילי = יציאה מוקדמת
+  return{late:inDiff>0?inDiff:0,earlyLeave:outDiff<0?Math.abs(outDiff):0,lateLeave:outDiff>0?outDiff:0};
+}
+function tardinessLabel(t){
+  const parts=[];
+  if(t.late>0)parts.push(`<span style="color:var(--danger);font-size:11px;font-weight:700;">⏰ איחור ${minsToStr(t.late)}</span>`);
+  if(t.earlyLeave>0)parts.push(`<span style="color:var(--accent3);font-size:11px;font-weight:700;">🚪 יצא מוקדם ${minsToStr(t.earlyLeave)}</span>`);
+  if(t.lateLeave>0)parts.push(`<span style="color:var(--accent2);font-size:11px;font-weight:700;">⭐ נשאר ${minsToStr(t.lateLeave)}</span>`);
+  return parts.join(' ');
+}
+function switchAttTab(tab){
+  document.getElementById('att-form-work').style.display=tab==='work'?'block':'none';
+  document.getElementById('att-form-absence').style.display=tab==='absence'?'block':'none';
+  document.getElementById('att-tab-work').className='btn btn-sm '+(tab==='work'?'btn-primary':'btn-ghost');
+  document.getElementById('att-tab-absence').className='btn btn-sm '+(tab==='absence'?'btn-purple':'btn-ghost');
+}
+
+// ===================== ABSENCE =====================
+function saveAbsence(){
+  const date=document.getElementById('abs-date').value,type=document.getElementById('abs-type').value,note=document.getElementById('abs-note').value.trim();
+  if(!date){toast('נא לבחור תאריך');return;}
+  let absences=gl('absences',[]);
+  const ei=absences.findIndex(a=>a.date===date);
+  const entry={date,type,note};
+  if(ei>=0)absences[ei]=entry;else absences.push(entry);
+  absences.sort((a,b)=>a.date.localeCompare(b.date));
+  sd('absences',absences);
+  document.getElementById('abs-note').value='';
+  toast('✓ היעדרות נשמרה');
+  renderAttendance();
+}
+function editAbsence(date){
+  const abs=gl('absences',[]).find(a=>a.date===date);if(!abs)return;
+  document.getElementById('edit-abs-date').value=abs.date;
+  document.getElementById('edit-abs-type').value=abs.type;
+  document.getElementById('edit-abs-note').value=abs.note||'';
+  document.getElementById('edit-abs-date-orig').value=abs.date;
+  document.getElementById('edit-absence-panel').style.display='block';
+  document.getElementById('edit-absence-panel').scrollIntoView({behavior:'smooth'});
+}
+function saveEditAbsence(){
+  const origDate=document.getElementById('edit-abs-date-orig').value,newDate=document.getElementById('edit-abs-date').value,type=document.getElementById('edit-abs-type').value,note=document.getElementById('edit-abs-note').value.trim();
+  let absences=gl('absences',[]).filter(a=>a.date!==origDate);
+  absences.push({date:newDate,type,note});
+  absences.sort((a,b)=>a.date.localeCompare(b.date));
+  sd('absences',absences);
+  document.getElementById('edit-absence-panel').style.display='none';
+  toast('✓ היעדרות עודכנה');
+  renderAttendance();
+}
+function deleteAbsence(date){
+  if(!confirm('למחוק היעדרות זו?'))return;
+  sd('absences',gl('absences',[]).filter(a=>a.date!==date));
+  renderAttendance();
+}
+function saveAttendance(){
+  const date=document.getElementById('att-date').value,inT=document.getElementById('att-in').value,outT=document.getElementById('att-out').value,note=document.getElementById('att-note').value.trim();
+  if(!date||!inT||!outT){toast('נא למלא תאריך ושעות');return;}
+  const totalMins=timeToMins(outT)-timeToMins(inT)-calcBreaksMins();
+  if(totalMins<=0){toast('שעות לא תקינות');return;}
+  const hours=parseFloat((totalMins/60).toFixed(2));
+  const tardiness=checkTardiness(inT,outT);
+  const breaks=breaksList.filter(b=>b.out&&b.back).map(b=>({out:b.out,back:b.back}));
+  let att=gl('attendance',[]);const ei=att.findIndex(a=>a.date===date);
+  const entry={date,in:inT,out:outT,hours,note,breaks,tardiness};
+  if(ei>=0)att[ei]=entry;else att.push(entry);
+  att.sort((a,b)=>a.date.localeCompare(b.date));sd('attendance',att);
+  breaksList=[];renderBreaksList();
+  const prev=document.getElementById('att-hours-preview');if(prev)prev.textContent='';
+  toast('✓ נשמר');renderAttendance();checkMissingDays();
+}
+function deleteAttendance(date){if(!confirm('למחוק?'))return;sd('attendance',gl('attendance',[]).filter(a=>a.date!==date));renderAttendance();}
+function renderAttendance(){
+  const month=parseInt(document.getElementById('att-month').value),year=parseInt(document.getElementById('att-year').value),hourly=getHourly();
+  const att=gl('attendance',[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const absences=gl('absences',[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const ABS_STYLE={'חופשה':{icon:'🏖️',cls:'badge-purple'},'חג':{icon:'✡️',cls:'badge-yellow'},'מחלה':{icon:'🤒',cls:'badge-red'}};
+  const allDays=[...att.map(a=>({...a,kind:'work'})),...absences.map(a=>({...a,kind:'absence'}))].sort((a,b)=>a.date.localeCompare(b.date));
+  let tH=0,lateDays=0,earlyDays=0,html='';
+  allDays.forEach(a=>{
+    const d=new Date(a.date+'T00:00:00');
+    if(a.kind==='work'){
+      const pay=a.hours*hourly;tH+=a.hours;
+      const t=a.tardiness||checkTardiness(a.in,a.out);
+      if(t.late>0)lateDays++;if(t.earlyLeave>0)earlyDays++;
+      const breakInfo=a.breaks&&a.breaks.length?`<br><span style="font-size:10px;color:var(--text2)">☕ ${a.breaks.map(b=>b.out+'–'+b.back).join(', ')}</span>`:'';
+      html+=`<tr>
+        <td>${a.date}</td><td>${DAYS_HE[d.getDay()]}</td>
+        <td><span class="badge badge-blue">עבודה</span></td>
+        <td>${a.in}${t.late>0?` <span style="color:var(--danger);font-size:10px">(+${minsToStr(t.late)})</span>`:''}</td>
+        <td>${a.out}${t.lateLeave>0?` <span style="color:var(--accent2);font-size:10px">(+${minsToStr(t.lateLeave)})</span>`:t.earlyLeave>0?` <span style="color:var(--accent3);font-size:10px">(-${minsToStr(t.earlyLeave)})</span>`:''}</td>
+        <td><span class="badge badge-blue">${a.hours.toFixed(2)}ש׳</span>${breakInfo}</td>
+        <td><span class="badge badge-green">${fc(pay)}</span></td>
+        <td style="color:var(--text2)">${a.note||''}</td>
+        <td><button class="btn btn-danger" onclick="deleteAttendance('${a.date}')">מחק</button></td>
+      </tr>`;
+    } else {
+      const st=ABS_STYLE[a.type]||{icon:'📅',cls:'badge-gray'};
+      html+=`<tr style="background:rgba(124,58,237,.05)"><td>${a.date}</td><td>${DAYS_HE[d.getDay()]}</td><td><span class="badge ${st.cls}">${st.icon} ${a.type}</span></td><td colspan="4" style="color:var(--text2);font-style:italic">היעדרות</td><td style="color:var(--text2)">${a.note||''}</td><td style="display:flex;gap:4px;"><button class="btn btn-ghost btn-sm" onclick="editAbsence('${a.date}')">✏️</button><button class="btn btn-danger" onclick="deleteAbsence('${a.date}')">מחק</button></td></tr>`;
+    }
+  });
+  document.getElementById('att-tbody').innerHTML=html||`<tr><td colspan="9" class="empty"><div class="empty-icon">📅</div>אין ימים מוזנים</td></tr>`;
+  document.getElementById('s-days').textContent=att.length;
+  document.getElementById('s-hours').textContent=tH.toFixed(1);
+  document.getElementById('s-base').textContent=fc(tH*hourly);
+  document.getElementById('s-absences').textContent=absences.length;
+  const latePct=att.length?((lateDays/att.length)*100).toFixed(0):0;
+  const tardEl=document.getElementById('tardiness-summary');
+  if(tardEl)tardEl.innerHTML=lateDays>0||earlyDays>0?`
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12px;">
+      ${lateDays>0?`<span style="color:var(--danger)">⏰ ${lateDays} ימי איחור (${latePct}%)</span>`:''}
+      ${earlyDays>0?`<span style="color:var(--accent3)">🚪 ${earlyDays} יציאות מוקדמות</span>`:''}
+    </div>`:'';
+  renderCalendar();
+  renderForecast();
+  renderAchievements();
+}
+
+// ===================== BONUSES =====================
+function updateBonusPreview(){const t=document.getElementById('bon-type').value,a=document.getElementById('bon-amount').value;document.getElementById('bon-preview').value=a?fc(calcBonus(t,a)):'';}
+function updateEditBonusPreview(){const t=document.getElementById('edit-bon-type').value,a=document.getElementById('edit-bon-amount').value;document.getElementById('edit-bon-preview').value=a?fc(calcBonus(t,a)):'';}
+function saveBonus(){
+  const date=document.getElementById('bon-date').value,client=document.getElementById('bon-client').value.trim(),type=document.getElementById('bon-type').value,amount=parseFloat(document.getElementById('bon-amount').value),referrer=document.getElementById('bon-referrer').value,status=document.getElementById('bon-status').value,note=document.getElementById('bon-note').value.trim();
+  if(!date||!client||!amount){toast('נא למלא תאריך, לקוח וסכום');return;}
+  const reward=calcBonus(type,amount),bt=getBonusTypes().find(b=>b.key===type);
+  let bonuses=gl('bonuses',[]);
+  bonuses.push({id:Date.now(),date,client,type,typeLabel:bt?bt.label:type,amount,reward:parseFloat(reward.toFixed(2)),referrer,status,note});
+  bonuses.sort((a,b)=>a.date.localeCompare(b.date));sd('bonuses',bonuses);
+  ['bon-client','bon-amount','bon-preview','bon-note'].forEach(id=>document.getElementById(id).value='');
+  toast('✓ בונוס נוסף');renderBonuses();
+}
+function editBonus(id){
+  const b=gl('bonuses',[]).find(b=>b.id===id);if(!b)return;
+  document.getElementById('edit-bon-id').value=id;
+  document.getElementById('edit-bon-date').value=b.date;
+  document.getElementById('edit-bon-client').value=b.client;
+  document.getElementById('edit-bon-type').value=b.type;
+  document.getElementById('edit-bon-amount').value=b.amount;
+  document.getElementById('edit-bon-referrer').value=b.referrer;
+  document.getElementById('edit-bon-status').value=b.status||'סגור';
+  document.getElementById('edit-bon-note').value=b.note||'';
+  document.getElementById('edit-bon-preview').value=fc(b.reward);
+  document.getElementById('edit-bonus-panel').style.display='block';
+  document.getElementById('edit-bonus-panel').scrollIntoView({behavior:'smooth'});
+}
+function saveEditBonus(){
+  const id=parseInt(document.getElementById('edit-bon-id').value),date=document.getElementById('edit-bon-date').value,client=document.getElementById('edit-bon-client').value.trim(),type=document.getElementById('edit-bon-type').value,amount=parseFloat(document.getElementById('edit-bon-amount').value),referrer=document.getElementById('edit-bon-referrer').value,status=document.getElementById('edit-bon-status').value,note=document.getElementById('edit-bon-note').value.trim();
+  const reward=calcBonus(type,amount),bt=getBonusTypes().find(b=>b.key===type);
+  let bonuses=gl('bonuses',[]);const ei=bonuses.findIndex(b=>b.id===id);
+  if(ei>=0)bonuses[ei]={id,date,client,type,typeLabel:bt?bt.label:type,amount,reward:parseFloat(reward.toFixed(2)),referrer,status,note};
+  bonuses.sort((a,b)=>a.date.localeCompare(b.date));sd('bonuses',bonuses);
+  document.getElementById('edit-bonus-panel').style.display='none';
+  toast('✓ בונוס עודכן');renderBonuses();
+}
+function deleteBonus(id){
+  if(!confirm('למחוק?'))return;
+  const bonuses=gl('bonuses',[]).filter(b=>b.id!==id);
+  sd('bonuses',bonuses);
+  renderBonuses();
+  toast('✓ נמחק');
+}
+function renderBonuses(){
+  const month=parseInt(document.getElementById('bon-month').value),year=parseInt(document.getElementById('bon-year').value),sf=document.getElementById('bon-status-filter').value;
+  const selDate=document.getElementById('bon-today-date')?document.getElementById('bon-today-date').value:new Date().toISOString().split('T')[0];
+  let bonuses=gl('bonuses',[]).filter(b=>{const d=new Date(b.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  if(sf!=='all')bonuses=bonuses.filter(b=>b.status===sf);
+  let total=0,pending=0,html='';
+  const dayBonuses=gl('bonuses',[]).filter(b=>b.date===selDate&&b.status!=='בוטל');
+  const dayTotal=dayBonuses.reduce((s,b)=>s+b.reward,0);
+  bonuses.forEach(b=>{
+    if(b.status!=='בוטל')total+=b.reward;
+    if(b.status==='ממתין')pending++;
+    html+=`<tr><td>${b.date}</td><td>${b.client}</td><td><span class="badge badge-yellow">${b.typeLabel||b.type}</span></td><td>${fc(b.amount)}</td><td><span class="badge badge-green">${fc(b.reward)}</span></td><td>${b.referrer}</td><td>${statusBadge(b.status)}</td><td style="color:var(--text2);max-width:110px;overflow:hidden;text-overflow:ellipsis">${b.note||''}</td><td style="display:flex;gap:4px;"><button class="btn btn-ghost btn-sm" onclick="editBonus(${b.id})">✏️</button><button class="btn btn-danger" onclick="deleteBonus(${b.id})">מחק</button></td></tr>`;
+  });
+  document.getElementById('bon-tbody').innerHTML=html||`<tr><td colspan="9" class="empty"><div class="empty-icon">💰</div>אין בונוסים</td></tr>`;
+  document.getElementById('b-total').textContent=fc(total);
+  document.getElementById('b-count').textContent=bonuses.length;
+  document.getElementById('b-pending').textContent=pending;
+  document.getElementById('b-today').textContent=dayBonuses.length?fc(dayTotal)+' ('+dayBonuses.length+')':'₪0';
+}
+
+// ===================== MONTHLY REPORT =====================
+function printReport(){
+  const mode=document.getElementById('rep-print-mode').value;
+  if(mode==='no-bonuses'){
+    document.querySelectorAll('.print-bonus-section').forEach(el=>el.classList.add('print-hide'));
+    window.print();
+    setTimeout(()=>document.querySelectorAll('.print-bonus-section').forEach(el=>el.classList.remove('print-hide')),500);
+  } else window.print();
+}
+function renderMonthlyReport(){
+  const month=parseInt(document.getElementById('rep-month').value),year=parseInt(document.getElementById('rep-year').value),hourly=getHourly(),name=getName(),view=document.getElementById('rep-view').value;
+  const att=gl('attendance',[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const bonuses=gl('bonuses',[]).filter(b=>{const d=new Date(b.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const tH=att.reduce((s,a)=>s+a.hours,0),basePay=tH*hourly,bonusPay=bonuses.filter(b=>b.status!=='בוטל').reduce((s,b)=>s+b.reward,0),total=basePay+bonusPay;
+  let html='';
+
+  // Summary cards – always shown
+  html+=`<div class="cards-row"><div class="stat-card blue"><div class="label">ימי עבודה</div><div class="value">${att.length}</div></div><div class="stat-card blue"><div class="label">שעות</div><div class="value">${tH.toFixed(1)}</div></div><div class="stat-card yellow"><div class="label">שכר בסיס</div><div class="value">${fc(basePay)}</div></div><div class="stat-card green"><div class="label">בונוסים</div><div class="value">${fc(bonusPay)}</div></div><div class="stat-card red"><div class="label">סה"כ לתשלום</div><div class="value">${fc(total)}</div></div></div>`;
+
+  if(view==='summary'){
+    // Summary only – no detail tables
+    html+=`<div class="panel"><div class="panel-title"><div class="dot" style="background:var(--accent2)"></div> סיכום – ${MONTHS_HE[month]} ${year} | ${name}</div>
+    <table style="max-width:440px">
+      <tr><td style="padding:10px 0;font-size:14px;">שכר בסיס (${tH.toFixed(1)} שעות × ${hourly}₪)</td><td style="font-weight:700;font-size:14px;">${fc(basePay)}</td></tr>
+      <tr><td style="padding:10px 0;font-size:14px;">בונוסים (${bonuses.length} עסקאות)</td><td style="font-weight:700;font-size:14px;color:var(--accent2)">${fc(bonusPay)}</td></tr>
+      <tr style="border-top:2px solid var(--border)"><td style="padding:12px 0;font-weight:800;font-size:17px;">סה"כ לתשלום</td><td style="font-weight:900;font-size:22px;color:var(--accent3)">${fc(total)}</td></tr>
+    </table></div>`;
+  } else {
+    if(view==='full'||view==='hours'){
+      html+=`<div class="panel"><div class="panel-title"><div class="dot"></div> נוכחות – ${MONTHS_HE[month]} ${year} | ${name}</div><div class="table-wrap"><table><thead><tr><th>תאריך</th><th>יום</th><th>כניסה</th><th>יציאה</th><th>שעות</th><th>שכר</th><th>הערות</th></tr></thead><tbody>`;
+      att.forEach(a=>{const d=new Date(a.date+'T00:00:00');html+=`<tr><td>${a.date}</td><td>${DAYS_HE[d.getDay()]}</td><td>${a.in}</td><td>${a.out}</td><td>${a.hours.toFixed(2)}</td><td>${fc(a.hours*hourly)}</td><td>${a.note||''}</td></tr>`;});
+      html+=`</tbody></table></div></div>`;
+    }
+    if(view==='full'||view==='bonuses'){
+      html+=`<div class="panel print-bonus-section"><div class="panel-title"><div class="dot" style="background:var(--accent3)"></div> בונוסים</div><div class="table-wrap"><table><thead><tr><th>תאריך</th><th>לקוח</th><th>סוג</th><th>סכום</th><th>תגמול</th><th>גורם מפנה</th><th>סטטוס</th><th>הערות</th></tr></thead><tbody>`;
+      bonuses.forEach(b=>{html+=`<tr><td>${b.date}</td><td>${b.client}</td><td>${b.typeLabel||b.type}</td><td>${fc(b.amount)}</td><td>${fc(b.reward)}</td><td>${b.referrer}</td><td>${statusBadge(b.status)}</td><td>${b.note||''}</td></tr>`;});
+      html+=`</tbody></table></div></div>`;
+    }
+    html+=`<div class="panel"><div class="panel-title"><div class="dot" style="background:var(--accent2)"></div> סיכום</div>
+    <table style="max-width:440px">
+      <tr><td style="padding:10px 0;">שכר בסיס (${tH.toFixed(1)} שעות × ${hourly}₪)</td><td style="font-weight:700">${fc(basePay)}</td></tr>
+      <tr><td style="padding:10px 0;">בונוסים (${bonuses.length} עסקאות)</td><td style="font-weight:700;color:var(--accent2)">${fc(bonusPay)}</td></tr>
+      <tr style="border-top:2px solid var(--border)"><td style="padding:12px 0;font-weight:800;font-size:16px;">סה"כ לתשלום</td><td style="font-weight:900;font-size:22px;color:var(--accent3)">${fc(total)}</td></tr>
+    </table></div>`;
+  }
+  document.getElementById('monthly-report-content').innerHTML=html;
+}
+
+// ===================== ANNUAL REPORT =====================
+let chartInstances={};
+function destroyChart(id){if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}}
+function renderAnnualReport(){
+  const year=parseInt(document.getElementById('ann-year').value),hourly=getHourly(),name=getName();
+  const att=gl('attendance',[]).filter(a=>new Date(a.date).getFullYear()===year);
+  const bonuses=gl('bonuses',[]).filter(b=>new Date(b.date).getFullYear()===year);
+  let rows='',tD=0,tH=0,tBase=0,tBonus=0,tCount=0;
+  const baseArr=[],bonusArr=[],totalArr=[];
+  for(let m=0;m<12;m++){
+    const mA=att.filter(a=>new Date(a.date).getMonth()===m),mB=bonuses.filter(b=>new Date(b.date).getMonth()===m&&b.status!=='בוטל');
+    const h=mA.reduce((s,a)=>s+a.hours,0),base=h*hourly,bonus=mB.reduce((s,b)=>s+b.reward,0);
+    tD+=mA.length;tH+=h;tBase+=base;tBonus+=bonus;tCount+=mB.length;
+    baseArr.push(parseFloat(base.toFixed(0)));bonusArr.push(parseFloat(bonus.toFixed(0)));totalArr.push(parseFloat((base+bonus).toFixed(0)));
+    rows+=`<tr><td><strong>${MONTHS_HE[m]}</strong></td><td>${mA.length}</td><td>${h.toFixed(1)}</td><td>${fc(base)}</td><td style="color:var(--accent2)">${fc(bonus)}</td><td>${mB.length}</td><td style="color:var(--accent3);font-weight:700">${fc(base+bonus)}</td></tr>`;
+  }
+  const activeM=Array.from({length:12},(_,m)=>m).filter(m=>att.some(a=>new Date(a.date).getMonth()===m)||bonuses.some(b=>new Date(b.date).getMonth()===m)).length||1;
+  document.getElementById('annual-report-content').innerHTML=`
+  <div class="cards-row">
+    <div class="stat-card blue"><div class="label">ימי עבודה</div><div class="value">${tD}</div></div>
+    <div class="stat-card blue"><div class="label">שעות</div><div class="value">${tH.toFixed(0)}</div></div>
+    <div class="stat-card yellow"><div class="label">שכר בסיס</div><div class="value">${fc(tBase)}</div></div>
+    <div class="stat-card green"><div class="label">בונוסים</div><div class="value">${fc(tBonus)}</div></div>
+    <div class="stat-card blue"><div class="label">עסקאות</div><div class="value">${tCount}</div></div>
+    <div class="stat-card red"><div class="label">סה"כ שנתי</div><div class="value">${fc(tBase+tBonus)}</div></div>
+  </div>
+  <div class="panel"><div class="panel-title"><div class="dot"></div> פירוט חודשי – ${year} | ${name}</div>
+  <div class="table-wrap"><table><thead><tr><th>חודש</th><th>ימים</th><th>שעות</th><th>שכר בסיס</th><th>בונוסים</th><th>עסקאות</th><th>סה"כ</th></tr></thead>
+  <tbody>${rows}
+  <tr style="border-top:2px solid var(--border);font-weight:800;background:var(--surface2)"><td>סה"כ</td><td>${tD}</td><td>${tH.toFixed(1)}</td><td>${fc(tBase)}</td><td style="color:var(--accent2)">${fc(tBonus)}</td><td>${tCount}</td><td style="color:var(--accent3);font-size:15px">${fc(tBase+tBonus)}</td></tr>
+  <tr style="font-weight:700;color:var(--accent2)"><td>ממוצע חודשי</td><td>${(tD/activeM).toFixed(1)}</td><td>${(tH/activeM).toFixed(1)}</td><td>${fc(tBase/activeM)}</td><td>${fc(tBonus/activeM)}</td><td>${(tCount/activeM).toFixed(1)}</td><td>${fc((tBase+tBonus)/activeM)}</td></tr>
+  </tbody></table></div></div>`;
+
+  // Charts
+  const chartsHtml=`
+  <div class="chart-card"><div class="chart-title">📊 שכר ובונוסים חודשי</div><div class="chart-wrap"><canvas id="chart-monthly"></canvas></div></div>
+  <div class="chart-card"><div class="chart-title">📈 סה"כ הכנסה חודשי</div><div class="chart-wrap"><canvas id="chart-compare"></canvas></div></div>
+  <div class="chart-card"><div class="chart-title">👤 דירוג גורמי מפנה</div><div class="chart-wrap"><canvas id="chart-referrer"></canvas></div></div>
+  <div class="chart-card"><div class="chart-title">💰 דירוג סוגי בונוסים</div><div class="chart-wrap"><canvas id="chart-bonus-type"></canvas></div></div>`;
+  document.getElementById('annual-charts').innerHTML=chartsHtml;
+  setTimeout(()=>{
+    ['chart-monthly','chart-compare','chart-referrer','chart-bonus-type'].forEach(destroyChart);
+    chartInstances['chart-monthly']=new Chart(document.getElementById('chart-monthly'),{type:'bar',data:{labels:MONTHS_HE,datasets:[{label:'שכר בסיס',data:baseArr,backgroundColor:'rgba(37,99,235,.7)',borderRadius:4},{label:'בונוסים',data:bonusArr,backgroundColor:'rgba(5,150,105,.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#64748b',font:{family:'Arial'}}}},scales:{x:{stacked:true,ticks:{color:'#64748b',font:{family:'Arial',size:10}},grid:{color:'#dde3ed'}},y:{stacked:true,ticks:{color:'#64748b',font:{family:'Arial',size:10}},grid:{color:'#dde3ed'}}}}});
+    chartInstances['chart-compare']=new Chart(document.getElementById('chart-compare'),{type:'line',data:{labels:MONTHS_HE,datasets:[{label:'סה"כ',data:totalArr,borderColor:'#d97706',backgroundColor:'rgba(217,119,6,.08)',tension:.4,fill:true,pointBackgroundColor:'#d97706',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#64748b',font:{family:'Arial'}}}},scales:{x:{ticks:{color:'#64748b',font:{family:'Arial',size:10}},grid:{color:'#dde3ed'}},y:{ticks:{color:'#64748b',font:{family:'Arial',size:10}},grid:{color:'#dde3ed'}}}}});
+    const refMap={};bonuses.filter(b=>b.status!=='בוטל').forEach(b=>{refMap[b.referrer]=(refMap[b.referrer]||0)+b.reward;});
+    const rS=Object.entries(refMap).sort((a,b)=>b[1]-a[1]);
+    chartInstances['chart-referrer']=new Chart(document.getElementById('chart-referrer'),{type:'doughnut',data:{labels:rS.map(r=>r[0]),datasets:[{data:rS.map(r=>parseFloat(r[1].toFixed(0))),backgroundColor:['#2563eb','#059669','#d97706','#dc2626','#7c3aed','#ea580c','#0891b2','#db2777','#16a34a'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#64748b',font:{family:'Arial',size:11},boxWidth:12}}}}});
+    const tMap={};bonuses.filter(b=>b.status!=='בוטל').forEach(b=>{const l=b.typeLabel||b.type;tMap[l]=(tMap[l]||0)+b.reward;});
+    const tS=Object.entries(tMap).sort((a,b)=>b[1]-a[1]);
+    chartInstances['chart-bonus-type']=new Chart(document.getElementById('chart-bonus-type'),{type:'bar',data:{labels:tS.map(t=>t[0]),datasets:[{label:'תגמול',data:tS.map(t=>parseFloat(t[1].toFixed(0))),backgroundColor:'rgba(124,58,237,.7)',borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{family:'Arial',size:10}},grid:{color:'#dde3ed'}},y:{ticks:{color:'#64748b',font:{family:'Arial',size:10}},grid:{color:'#dde3ed'}}}}});
+  },100);
+}
+
+// ===================== LEADS =====================
+function populateLeadsOwnerFilter(){
+  const sel=document.getElementById('leads-owner');
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="all">כל הלידים</option>'+getReferrers().map(r=>`<option value="${r}"${r===cur?' selected':''}>${r}</option>`).join('');
+}
+function toggleLeadsScope(){
+  const scope=document.getElementById('leads-scope').value;
+  document.getElementById('leads-month').style.display=scope==='month'?'':'none';
+}
+function populateLeadsClientFilter(){
+  const bonuses=gl('bonuses',[]);
+  const clients=[...new Set(bonuses.map(b=>b.client))].sort();
+  const sel=document.getElementById('leads-client-filter');
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="all">כל הלקוחות</option>'+clients.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+}
+function renderLeads(){
+  populateLeadsOwnerFilter();
+  populateLeadsClientFilter();
+  const scope=document.getElementById('leads-scope').value,month=parseInt(document.getElementById('leads-month').value),year=parseInt(document.getElementById('leads-year').value),owner=document.getElementById('leads-owner').value,clientFilter=document.getElementById('leads-client-filter').value;
+  let bonuses=gl('bonuses',[]).filter(b=>{
+    const d=new Date(b.date);
+    if(scope==='month')return d.getMonth()===month&&d.getFullYear()===year;
+    return d.getFullYear()===year;
+  });
+  if(owner!=='all')bonuses=bonuses.filter(b=>b.referrer===owner);
+  if(clientFilter!=='all')bonuses=bonuses.filter(b=>b.client===clientFilter);
+  const total=bonuses.filter(b=>b.status!=='בוטל').reduce((s,b)=>s+b.reward,0);
+  const ownerLabel=owner==='all'?'כל הלידים':owner;
+  let html=`<div class="cards-row"><div class="stat-card blue"><div class="label">לידים</div><div class="value">${bonuses.length}</div></div><div class="stat-card green"><div class="label">תגמול כולל</div><div class="value">${fc(total)}</div></div></div>`;
+  html+=`<div class="panel"><div class="panel-title"><div class="dot" style="background:var(--purple)"></div> רשימת לידים – ${ownerLabel}</div><div class="table-wrap"><table><thead><tr><th>תאריך</th><th>לקוח</th><th>סוג</th><th>סכום</th><th>תגמול</th><th>גורם מפנה</th><th>סטטוס</th><th>הערות</th></tr></thead><tbody>`;
+  bonuses.forEach(b=>{html+=`<tr><td>${b.date}</td><td>${b.client}</td><td>${b.typeLabel||b.type}</td><td>${fc(b.amount)}</td><td>${fc(b.reward)}</td><td>${b.referrer}</td><td>${statusBadge(b.status)}</td><td>${b.note||''}</td></tr>`;});
+  html+=`</tbody></table></div></div>`;
+  if(owner==='all'&&clientFilter==='all'){
+    const rMap={};bonuses.filter(b=>b.status!=='בוטל').forEach(b=>{if(!rMap[b.referrer])rMap[b.referrer]={count:0,reward:0};rMap[b.referrer].count++;rMap[b.referrer].reward+=b.reward;});
+    const rSorted=Object.entries(rMap).sort((a,b)=>b[1].reward-a[1].reward);
+    if(rSorted.length){
+      html+=`<div class="panel"><div class="panel-title"><div class="dot" style="background:var(--accent3)"></div> פירוט לפי גורם מפנה</div><div class="table-wrap"><table><thead><tr><th>גורם מפנה</th><th>כמות לידים</th><th>סה"כ תגמול</th></tr></thead><tbody>`;
+      rSorted.forEach(([r,v])=>{html+=`<tr><td>${r}</td><td>${v.count}</td><td>${fc(v.reward)}</td></tr>`;});
+      html+=`</tbody></table></div></div>`;
+    }
+  }
+  document.getElementById('leads-content').innerHTML=html;
+}
+
+// ===================== DAILY GOAL =====================
+function saveDailyGoal(){
+  const target=parseFloat(document.getElementById('daily-goal-target').value);
+  const includeBase=document.getElementById('daily-goal-include-base').value;
+  if(!target||target<=0){toast('נא להכניס יעד תקין');return;}
+  sd('dailyGoalTarget',target);
+  sd('dailyGoalIncludeBase',includeBase);
+  toast('✓ יעד יומי נשמר');
+  renderDailyGoal();
+}
+function countWorkingDays(year,month){
+  // count Sun–Thu in the month (days 0–4)
+  const total=new Date(year,month+1,0).getDate();
+  let count=0;
+  for(let d=1;d<=total;d++){const dow=new Date(year,month,d).getDay();if(dow!==5&&dow!==6)count++;}
+  return count;
+}
+function countRemainingWorkingDays(year,month,fromDay){
+  // remaining working days starting from fromDay (inclusive)
+  const total=new Date(year,month+1,0).getDate();
+  let count=0;
+  for(let d=fromDay;d<=total;d++){const dow=new Date(year,month,d).getDay();if(dow!==5&&dow!==6)count++;}
+  return count;
+}
+function renderDailyGoal(){
+  const el=document.getElementById('daily-goal-display');
+  if(!el)return;
+  const target=parseFloat(gs('dailyGoalTarget',0));
+  const includeBase=gs('dailyGoalIncludeBase','yes');
+  // load saved values into form
+  const tInput=document.getElementById('daily-goal-target');
+  const ibSel=document.getElementById('daily-goal-include-base');
+  if(tInput&&target)tInput.value=target;
+  if(ibSel)ibSel.value=includeBase;
+  if(!target){el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:10px 0;">הגדר יעד חודשי למעלה ולחץ שמור</div>`;return;}
+  const now=new Date();
+  const month=now.getMonth(),year=now.getFullYear(),todayDay=now.getDate();
+  const todayStr=now.toISOString().split('T')[0];
+  const hourly=getHourly();
+  const att=gl('attendance',[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const bonuses=gl('bonuses',[]).filter(b=>{const d=new Date(b.date);return d.getMonth()===month&&d.getFullYear()===year&&b.status!=='בוטל';});
+  // earned so far this month
+  const baseEarned=att.reduce((s,a)=>s+a.hours*hourly,0);
+  const bonusEarned=bonuses.reduce((s,b)=>s+b.reward,0);
+  const totalEarned=includeBase==='yes'?baseEarned+bonusEarned:bonusEarned;
+  // today
+  const todayBonuses=bonuses.filter(b=>b.date===todayStr);
+  const todayBonusEarned=todayBonuses.reduce((s,b)=>s+b.reward,0);
+  const todayAtt=att.find(a=>a.date===todayStr);
+  const todayBaseEarned=todayAtt?todayAtt.hours*hourly:0;
+  const todayEarned=includeBase==='yes'?todayBaseEarned+todayBonusEarned:todayBonusEarned;
+  // working days
+  const totalWD=countWorkingDays(year,month);
+  const remainWD=countRemainingWorkingDays(year,month,todayDay);
+  const passedWD=totalWD-remainWD;
+  // is today a working day?
+  const todayDow=now.getDay();
+  const isTodayWork=todayDow!==5&&todayDow!==6;
+  // daily target = remaining needed / remaining days
+  const remaining=Math.max(0,target-totalEarned);
+  const dailyNeeded=remainWD>0?remaining/remainWD:0;
+  // today progress
+  const todayPct=dailyNeeded>0?Math.min(100,(todayEarned/dailyNeeded)*100):100;
+  const stillNeededToday=Math.max(0,dailyNeeded-todayEarned);
+  // overall progress
+  const overallPct=Math.min(100,(totalEarned/target)*100);
+  const barClass=overallPct>=100?'progress-green':overallPct>=60?'progress-yellow':'progress-red';
+  const todayBarClass=todayPct>=100?'progress-green':todayPct>=50?'progress-yellow':'progress-red';
+  let statusText='',statusCls='';
+  if(!isTodayWork){statusText='🏖️ היום יום חופש';statusCls='dg-status-warn';}
+  else if(todayPct>=100){statusText='✅ יעד היום הושג!';statusCls='dg-status-ok';}
+  else if(todayPct>=50){statusText='⚡ בדרך הנכונה';statusCls='dg-status-warn';}
+  else{statusText='🎯 יש עוד עבודה';statusCls='dg-status-bad';}
+  const todayChartId=`dg-today-chart-${Date.now()}`;
+  if(chartInstances['dg-today']){chartInstances['dg-today'].destroy();delete chartInstances['dg-today'];}
+  el.innerHTML=`
+    <!-- ===== TODAY HERO ===== -->
+    <div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:14px;padding:22px;margin-bottom:18px;color:#fff;">
+      <div style="font-size:11px;font-weight:700;opacity:.7;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">היום — ${now.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})}</div>
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+        <!-- עוגה -->
+        <div style="position:relative;width:160px;height:160px;flex-shrink:0;">
+          <canvas id="${todayChartId}" width="160" height="160"></canvas>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+            <div style="font-size:9px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.5px;">הושג</div>
+            <div style="font-size:22px;font-weight:900;color:${todayPct>=100?'#36d9a0':todayPct>=50?'#fbbf24':'#f87171'};">${todayPct.toFixed(0)}%</div>
+            <div style="font-size:9px;font-weight:700;opacity:.6;">מיעד היום</div>
+          </div>
+        </div>
+        <!-- מספרים -->
+        <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <div style="font-size:11px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.5px;">יעד להיום</div>
+            <div style="font-size:38px;font-weight:900;color:#fff;line-height:1.1;">${fc(dailyNeeded)}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:11px 14px;">
+              <div style="font-size:10px;font-weight:700;opacity:.6;text-transform:uppercase;">סגרתי היום</div>
+              <div style="font-size:22px;font-weight:900;color:#36d9a0;margin-top:2px;">${fc(todayEarned)}</div>
+              ${todayBonuses.length?`<div style="font-size:10px;opacity:.6;margin-top:2px;">${todayBonuses.length} עסקאות</div>`:'<div style="font-size:10px;opacity:.5;margin-top:2px;">אין עסקאות עדיין</div>'}
+            </div>
+            <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:11px 14px;">
+              <div style="font-size:10px;font-weight:700;opacity:.6;text-transform:uppercase;">נשאר להיום</div>
+              <div style="font-size:22px;font-weight:900;color:${stillNeededToday===0?'#36d9a0':'#f87171'};margin-top:2px;">${stillNeededToday===0?'✅ הגעת!':fc(stillNeededToday)}</div>
+              ${stillNeededToday>0?`<div style="font-size:10px;opacity:.6;margin-top:2px;">${((stillNeededToday/dailyNeeded)*100).toFixed(0)}% נותר</div>`:''}
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- פס יומי -->
+      <div style="margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;opacity:.6;margin-bottom:5px;"><span>התקדמות יומית</span><span>${todayPct.toFixed(1)}%</span></div>
+        <div style="background:rgba(255,255,255,.15);border-radius:20px;height:10px;overflow:hidden;">
+          <div style="height:100%;border-radius:20px;transition:width .4s;background:${todayPct>=100?'#36d9a0':todayPct>=50?'#fbbf24':'#f87171'};width:${todayPct}%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MONTHLY CONTEXT ===== -->
+    <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">📅 הקשר חודשי — ${MONTHS_HE[month]} ${year}</div>
+    <div class="dg-grid">
+      <div class="dg-card"><div class="dg-label">יעד חודשי</div><div class="dg-value" style="color:var(--accent);">${fc(target)}</div><div class="dg-sub">${includeBase==='yes'?'בסיס + בונוסים':'בונוסים בלבד'}</div></div>
+      <div class="dg-card"><div class="dg-label">הושג עד כה</div><div class="dg-value" style="color:var(--accent2);">${fc(totalEarned)}</div><div class="dg-sub">${overallPct.toFixed(1)}% מהיעד</div></div>
+      <div class="dg-card"><div class="dg-label">נותר לחודש</div><div class="dg-value" style="color:var(--danger);">${fc(remaining)}</div><div class="dg-sub">${remainWD} ימי עבודה</div></div>
+      <div class="dg-card"><div class="dg-label">ימי עבודה</div><div class="dg-value" style="color:var(--accent3);">${passedWD}/${totalWD}</div><div class="dg-sub">עברו / סה"כ</div></div>
+    </div>
+    <div style="margin-bottom:4px;display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text2);">
+      <span>התקדמות חודשית</span><span>${overallPct.toFixed(1)}%</span>
+    </div>
+    <div class="progress-wrap" style="height:10px;">
+      <div class="progress-bar ${barClass}" style="width:${overallPct}%"></div>
+    </div>
+  `;
+  // עוגה יומית
+  setTimeout(()=>{
+    const canvas=document.getElementById(todayChartId);
+    if(!canvas)return;
+    const earned=Math.min(todayEarned,dailyNeeded);
+    const left=Math.max(0,dailyNeeded-todayEarned);
+    chartInstances['dg-today']=new Chart(canvas,{
+      type:'doughnut',
+      data:{
+        labels:['הושג','נותר'],
+        datasets:[{
+          data:[parseFloat(earned.toFixed(2)),parseFloat(left.toFixed(2))||0.001],
+          backgroundColor:[todayPct>=100?'#36d9a0':todayPct>=50?'#fbbf24':'#f87171','rgba(255,255,255,.12)'],
+          borderWidth:0
+        }]
+      },
+      options:{responsive:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fc(ctx.raw)}`}}}}
+    });
+  },100);
+}
+
+// ===================== GOALS =====================
+function saveGoal(){
+  const name=document.getElementById('goal-name').value.trim(),types=getSelectedGoalTypes(),trackBy=document.getElementById('goal-track-by').value,target=parseFloat(document.getElementById('goal-target').value),from=document.getElementById('goal-from').value,to=document.getElementById('goal-to').value;
+  if(!name||!target||!from||!to){toast('נא למלא את כל השדות');return;}
+  const goals=gl('goals',[]);
+  goals.push({id:Date.now(),name,types,trackBy,target,from,to});
+  sd('goals',goals);
+  document.getElementById('goal-name').value='';document.getElementById('goal-target').value='';
+  toast('✓ יעד נוסף');renderGoals();
+}
+function deleteGoal(id){if(!confirm('למחוק יעד?'))return;sd('goals',gl('goals',[]).filter(g=>g.id!==id));renderGoals();}
+function renderGoals(){
+  const goals=gl('goals',[]);
+  const bonuses=gl('bonuses',[]).filter(b=>b.status!=='בוטל');
+  const el=document.getElementById('goals-list');
+  const CHART_COLORS=['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#ea580c','#0891b2','#db2777','#16a34a'];
+  Object.keys(chartInstances).filter(k=>k.startsWith('goal-')).forEach(k=>{chartInstances[k].destroy();delete chartInstances[k];});
+  if(!goals.length){el.innerHTML=`<div class="panel"><div style="text-align:center;padding:30px;color:var(--text2);"><div style="font-size:48px;margin-bottom:12px;">🎯</div>אין יעדים פעילים</div></div>`;return;}
+  el.innerHTML=goals.map(g=>{
+    const gtypes=g.types||(g.type==='all'?['all']:[g.type]);
+    const isAll=gtypes.includes('all');
+    const bts=getBonusTypes();
+    const relevant=bonuses.filter(b=>{
+      const d=new Date(b.date);const df=new Date(g.from),dt=new Date(g.to);
+      return d>=df&&d<=dt&&(isAll||gtypes.includes(b.type));
+    });
+    const trackBy=g.trackBy||'reward';
+    const getValue=b=>trackBy==='amount'?(b.amount||0):(b.reward||0);
+    const current=relevant.reduce((s,b)=>s+getValue(b),0);
+    const pct=Math.min(100,(current/g.target*100));
+    const remaining=Math.max(0,g.target-current);
+    const barClass=pct>=100?'progress-green':pct>=60?'progress-yellow':'progress-red';
+    const typeMap={};
+    relevant.forEach(b=>{const l=b.typeLabel||b.type;typeMap[l]=(typeMap[l]||0)+getValue(b);});
+    const typeEntries=Object.entries(typeMap).sort((a,b)=>b[1]-a[1]);
+    const today=new Date();const toDate=new Date(g.to);
+    const daysLeft=Math.max(0,Math.ceil((toDate-today)/(1000*60*60*24)));
+    const dailyNeeded=daysLeft>0&&remaining>0?remaining/daysLeft:0;
+    const typeLabels=isAll?'כל הבונוסים':gtypes.map(k=>{const bt=bts.find(b=>b.key===k);return bt?bt.label:k;}).join(', ');
+    const breakdownHtml=typeEntries.length?`
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">פירוט לפי סוג:</div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        ${typeEntries.map(([t,v],i)=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);">
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:${CHART_COLORS[i%CHART_COLORS.length]};display:inline-block;flex-shrink:0;"></span>${t}</span>
+          <span style="font-weight:700;">${fc(v)}</span>
+        </div>`).join('')}
+      </div>`
+      :`<div style="color:var(--text3);font-size:13px;margin-top:8px;">אין בונוסים תואמים עדיין</div>`;
+    return `<div class="goal-card">
+      <div class="goal-header">
+        <div class="goal-title">🎯 ${g.name}</div>
+        <button class="btn btn-danger" onclick="deleteGoal(${g.id})">מחק</button>
+      </div>
+      <div class="goal-meta">📅 ${g.from} עד ${g.to} | סוגים: ${typeLabels} | מדידה: ${trackBy==='amount'?'💼 סכום עסקה':'💰 תגמול'}</div>
+      <div class="goal-amount">התקדמות: ${fc(current)} מתוך ${fc(g.target)} (${pct.toFixed(1)}%)</div>
+      <div class="progress-wrap" style="margin-bottom:14px;"><div class="progress-bar ${barClass}" style="width:${pct}%"></div></div>
+      <div class="goal-body">
+        <div class="goal-chart-wrap"><canvas id="goal-chart-${g.id}" width="180" height="180"></canvas></div>
+        <div class="goal-stats">
+          <div class="goal-mini-grid">
+            <div class="goal-mini-stat"><div class="goal-mini-label">צברתי</div><div class="goal-mini-value" style="color:var(--accent2);">${fc(current)}</div></div>
+            <div class="goal-mini-stat"><div class="goal-mini-label">נותר</div><div class="goal-mini-value" style="color:var(--danger);">${remaining>0?fc(remaining):'✅ הגעת!'}</div></div>
+            <div class="goal-mini-stat"><div class="goal-mini-label">ימים שנותרו</div><div class="goal-mini-value" style="color:var(--accent3);">${daysLeft}</div></div>
+            <div class="goal-mini-stat"><div class="goal-mini-label">נדרש ליום</div><div class="goal-mini-value" style="color:var(--purple);font-size:${dailyNeeded>9999?'13px':'17px'};">${dailyNeeded>0?fc(dailyNeeded):'✅'}</div></div>
+          </div>
+          ${breakdownHtml}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  setTimeout(()=>{
+    goals.forEach(g=>{
+      const canvas=document.getElementById(`goal-chart-${g.id}`);
+      if(!canvas)return;
+      const gtypes=g.types||(g.type==='all'?['all']:[g.type]);
+      const isAll=gtypes.includes('all');
+      const relevant=bonuses.filter(b=>{
+        const d=new Date(b.date);const df=new Date(g.from),dt=new Date(g.to);
+        return d>=df&&d<=dt&&(isAll||gtypes.includes(b.type));
+      });
+      const trackBy=g.trackBy||'reward';
+      const getValue=b=>trackBy==='amount'?(b.amount||0):(b.reward||0);
+      const current=relevant.reduce((s,b)=>s+getValue(b),0);
+      const remaining=Math.max(0,g.target-current);
+      const typeMap={};
+      relevant.forEach(b=>{const l=b.typeLabel||b.type;typeMap[l]=(typeMap[l]||0)+getValue(b);});
+      const typeEntries=Object.entries(typeMap).sort((a,b)=>b[1]-a[1]);
+      const labels=[...typeEntries.map(e=>e[0]),...(remaining>0?['נותר']:[])];
+      const data=[...typeEntries.map(e=>parseFloat(e[1].toFixed(2))),...(remaining>0?[parseFloat(remaining.toFixed(2))]:[])];
+      const colors=[...CHART_COLORS.slice(0,typeEntries.length),...(remaining>0?['#e2e8f0']:[])];
+      if(!data.length){data.push(1);labels.push('אין נתונים');colors.push('#e2e8f0');}
+      chartInstances[`goal-${g.id}`]=new Chart(canvas,{
+        type:'doughnut',
+        data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},
+        options:{
+          responsive:false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fc(ctx.raw)}`}}
+          },
+          cutout:'60%'
+        }
+      });
+    });
+  },100);
+}
+
+// ===================== SETTINGS =====================
+function toggleHourlyScopeMonth(){const v=document.getElementById('set-hourly-scope').value;document.getElementById('set-month-row').style.display=v==='month'?'flex':'none';}
+function toggleBonusScopeMonth(){const v=document.getElementById('set-bonus-scope').value;document.getElementById('bonus-month-row').style.display=v==='month'?'flex':'none';}
+function renderSettings(){
+  document.getElementById('set-name').value=getName();
+  document.getElementById('set-hourly').value=getHourly();
+  document.getElementById('set-start-time').value=getWorkStart();
+  document.getElementById('set-end-time').value=getWorkEnd();
+  document.getElementById('set-hourly-scope').addEventListener('change',toggleHourlyScopeMonth);
+  renderBonusSettingsList();
+  renderRefList();
+  renderAbsTypesList();
+}
+function renderBonusSettingsList(){
+  const bts=getBonusTypes();
+  document.getElementById('bonus-settings-list').innerHTML=bts.map((bt,i)=>`
+    <div class="setting-row">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;">
+        <input style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:13px;padding:6px 10px;outline:none;width:120px;" type="text" id="blabel-${i}" value="${bt.label}">
+        <span style="font-size:11px;color:var(--text2)">${bt.rateType==='percent'?'%':'×'}</span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input class="setting-input" id="brate-${i}" type="number" step="0.001" min="0" value="${bt.rate}" style="width:90px;">
+        <button class="btn btn-danger" onclick="deleteBonusType(${i})" title="מחק">✕</button>
+      </div>
+    </div>`).join('');
+}
+function deleteBonusType(i){
+  if(!confirm('למחוק סוג בונוס זה?'))return;
+  const bts=getBonusTypes();bts.splice(i,1);sd('bonusTypes',bts);
+  renderBonusSettingsList();populateBonusSelects();toast('✓ נמחק');
+}
+function addBonusType(){
+  const label=document.getElementById('new-bonus-label').value.trim(),rate=parseFloat(document.getElementById('new-bonus-rate').value),rateType=document.getElementById('new-bonus-type').value;
+  if(!label||isNaN(rate)||rate<0){toast('נא למלא שם ושיעור');return;}
+  const key=label.replace(/\s/g,'_')+Date.now();
+  const bts=getBonusTypes();bts.push({key,label,rate,rateType});sd('bonusTypes',bts);
+  document.getElementById('new-bonus-label').value='';document.getElementById('new-bonus-rate').value='';
+  renderBonusSettingsList();populateBonusSelects();toast('✓ סוג בונוס נוסף');
+}
+function renderRefList(){
+  document.getElementById('ref-list').innerHTML=getReferrers().map((r,i)=>`<div class="ref-item"><input type="text" value="${r}" id="ref-${i}" onchange="updateReferrer(${i},this.value)"><button class="btn btn-danger" onclick="deleteReferrer(${i})">✕</button></div>`).join('');
+}
+function updateReferrer(i,v){const refs=getReferrers();refs[i]=v;sd('referrers',refs);populateReferrerSelects();}
+function deleteReferrer(i){const refs=getReferrers();refs.splice(i,1);sd('referrers',refs);renderRefList();populateReferrerSelects();}
+function addReferrer(){const v=document.getElementById('new-ref-input').value.trim();if(!v)return;const refs=getReferrers();refs.push(v);sd('referrers',refs);document.getElementById('new-ref-input').value='';renderRefList();populateReferrerSelects();toast('✓ גורם מפנה נוסף');}
+
+function saveGeneralSettings(){
+  const name=document.getElementById('set-name').value.trim()||DEFAULT_NAME;
+  const hourly=parseFloat(document.getElementById('set-hourly').value)||DEFAULT_HOURLY;
+  const pin=document.getElementById('set-pin').value.trim();
+  const scope=document.getElementById('set-hourly-scope').value;
+  const startTime=document.getElementById('set-start-time').value||'10:00';
+  const endTime=document.getElementById('set-end-time').value||'17:00';
+  sd('workerName',name);sd('workStart',startTime);sd('workEnd',endTime);
+  if(scope==='all'||scope==='future'){sd('hourly',hourly);}
+  else if(scope==='month'){
+    const m=parseInt(document.getElementById('set-scope-month').value),y=parseInt(document.getElementById('set-scope-year').value);
+    let overrides=gs('hourlyOverrides',{})||{};overrides[`${y}-${m}`]=hourly;sd('hourlyOverrides',overrides);sd('hourly',hourly);
+  }
+  if(pin){sd('pin',pin);document.getElementById('set-pin').value='';}
+  updateTopbar();toast('✓ הגדרות נשמרו');renderAttendance();
+}
+function saveBonusSettings(){
+  const bts=getBonusTypes(),scope=document.getElementById('set-bonus-scope').value;
+  bts.forEach((bt,i)=>{
+    const rateEl=document.getElementById('brate-'+i),labelEl=document.getElementById('blabel-'+i);
+    if(rateEl){const v=parseFloat(rateEl.value);if(!isNaN(v)&&v>=0)bt.rate=v;}
+    if(labelEl&&labelEl.value.trim())bt.label=labelEl.value.trim();
+  });
+  if(scope==='all'||scope==='future'){sd('bonusTypes',bts);}
+  else if(scope==='month'){
+    const m=parseInt(document.getElementById('set-bonus-month').value),y=parseInt(document.getElementById('set-bonus-year').value);
+    let overrides=gs('bonusOverrides',{})||{};overrides[`${y}-${m}`]=JSON.parse(JSON.stringify(bts));sd('bonusOverrides',overrides);sd('bonusTypes',bts);
+  }
+  populateBonusSelects();toast('✓ תגמולים נשמרו');
+}
+
+// ===================== IMPORT EXCEL =====================
+function importAttendanceExcel(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'}),ws=wb.Sheets[wb.SheetNames[0]],data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      const preview=[];
+      for(let i=1;i<data.length;i++){
+        const row=data[i];if(!row[0])continue;
+        const date=String(row[0]).trim(),inT=String(row[1]||'').trim(),outT=String(row[2]||'').trim(),note=String(row[3]||'').trim();
+        if(!date||!inT||!outT)continue;
+        const hours=calcHours(inT,outT);
+        if(hours>0)preview.push({date,in:inT,out:outT,hours:parseFloat(hours.toFixed(2)),note});
+      }
+      showImportPreview('attendance',preview);
+    }catch(err){toast('❌ שגיאה בקריאת הקובץ');}
+  };
+  reader.readAsBinaryString(file);event.target.value='';
+}
+function importBonusExcel(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'}),ws=wb.Sheets[wb.SheetNames[0]],data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      const preview=[];
+      for(let i=1;i<data.length;i++){
+        const row=data[i];if(!row[0])continue;
+        const date=String(row[0]).trim(),client=String(row[1]||'').trim(),type=String(row[2]||getBonusTypes()[0].key).trim(),amount=parseFloat(row[3])||0,referrer=String(row[4]||getReferrers()[0]).trim(),status=String(row[5]||'סגור').trim(),note=String(row[6]||'').trim();
+        if(!date||!client||!amount)continue;
+        const reward=calcBonus(type,amount),bt=getBonusTypes().find(b=>b.key===type);
+        preview.push({id:Date.now()+i,date,client,type,typeLabel:bt?bt.label:type,amount,reward:parseFloat(reward.toFixed(2)),referrer,status,note});
+      }
+      showImportPreview('bonuses',preview);
+    }catch(err){toast('❌ שגיאה בקריאת הקובץ');}
+  };
+  reader.readAsBinaryString(file);event.target.value='';
+}
+function showImportPreview(type,data){
+  if(!data.length){document.getElementById('import-preview').innerHTML='<div class="alert">לא נמצאו שורות תקינות לייבוא</div>';return;}
+  const isAtt=type==='attendance';
+  let html=`<div style="font-weight:700;margin-bottom:10px;color:var(--accent)">נמצאו ${data.length} שורות לייבוא – בדוק ולחץ אישור:</div>`;
+  html+=`<div class="import-preview"><table><thead><tr>`;
+  if(isAtt)html+=`<th>תאריך</th><th>כניסה</th><th>יציאה</th><th>שעות</th><th>הערות</th>`;
+  else html+=`<th>תאריך</th><th>לקוח</th><th>סוג</th><th>סכום</th><th>תגמול</th><th>גורם מפנה</th><th>סטטוס</th>`;
+  html+=`</tr></thead><tbody>`;
+  data.slice(0,20).forEach(r=>{
+    html+=`<tr>`;
+    if(isAtt)html+=`<td>${r.date}</td><td>${r.in}</td><td>${r.out}</td><td>${r.hours}</td><td>${r.note||''}</td>`;
+    else html+=`<td>${r.date}</td><td>${r.client}</td><td>${r.typeLabel||r.type}</td><td>${fc(r.amount)}</td><td>${fc(r.reward)}</td><td>${r.referrer}</td><td>${r.status}</td>`;
+    html+=`</tr>`;
+  });
+  if(data.length>20)html+=`<tr><td colspan="7" style="text-align:center;color:var(--text2)">...ועוד ${data.length-20} שורות</td></tr>`;
+  html+=`</tbody></table></div>`;
+  html+=`<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn btn-success" onclick="confirmImport('${type}',${JSON.stringify(data).replace(/'/g,"&#39;")})">✓ אשר ייבוא</button><button class="btn btn-ghost" onclick="document.getElementById('import-preview').innerHTML=''">ביטול</button></div>`;
+  document.getElementById('import-preview').innerHTML=html;
+}
+function confirmImport(type,data){
+  if(type==='attendance'){
+    let att=gl('attendance',[]);
+    data.forEach(r=>{const ei=att.findIndex(a=>a.date===r.date);if(ei>=0)att[ei]=r;else att.push(r);});
+    att.sort((a,b)=>a.date.localeCompare(b.date));sd('attendance',att);
+  } else {
+    let bonuses=gl('bonuses',[]);data.forEach(r=>bonuses.push(r));
+    bonuses.sort((a,b)=>a.date.localeCompare(b.date));sd('bonuses',bonuses);
+  }
+  document.getElementById('import-preview').innerHTML='';
+  toast('✓ ייבוא הושלם בהצלחה!');
+}
+
+// ===================== BACKUP & RESTORE =====================
+function backupData(){
+  const backup={version:3,date:new Date().toISOString(),attendance:gl('attendance',[]),absences:gl('absences',[]),bonuses:gl('bonuses',[]),goals:gl('goals',[]),settings:{hourly:getHourly(),workerName:getName(),bonusTypes:getBonusTypes(),referrers:getReferrers(),pin:getPin()}};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=`גיבוי_שכר_${new Date().toLocaleDateString('he-IL').replace(/\//g,'-')}.json`;
+  a.click();URL.revokeObjectURL(url);toast('✓ גיבוי הורד!');
+}
+function restoreData(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const b=JSON.parse(e.target.result);
+      if(!b.attendance||!b.bonuses)throw new Error();
+      sd('attendance',b.attendance);sd('bonuses',b.bonuses);if(b.goals)sd('goals',b.goals);if(b.absences)sd('absences',b.absences);
+      if(b.settings){if(b.settings.hourly)sd('hourly',b.settings.hourly);if(b.settings.workerName)sd('workerName',b.settings.workerName);if(b.settings.bonusTypes)sd('bonusTypes',b.settings.bonusTypes);if(b.settings.referrers)sd('referrers',b.settings.referrers);if(b.settings.pin)sd('pin',b.settings.pin);}
+      toast('✓ נתונים שוחזרו!');updateTopbar();renderAttendance();renderBonuses();renderGoals();
+    }catch{toast('❌ קובץ לא תקין');}
+  };
+  reader.readAsText(file);event.target.value='';
+}
+
+// ===================== EXCEL EXPORT =====================
+function tardyLabel(t){
+  if(!t)return'לא ידוע';
+  if(t.late>0)return`⏰ איחור ${minsToStr(t.late)}`;
+  return'✅ בזמן';
+}
+function exitLabel(t){
+  if(!t)return'לא ידוע';
+  if(t.earlyLeave>0)return`🚪 מוקדם ${minsToStr(t.earlyLeave)}`;
+  if(t.lateLeave>0)return`⭐ נשאר ${minsToStr(t.lateLeave)}`;
+  return'✅ בזמן';
+}
+function exportMonthlyExcel(){
+  const month=parseInt(document.getElementById('rep-month').value),year=parseInt(document.getElementById('rep-year').value),hourly=getHourly(),name=getName();
+  const att=gl('attendance',[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const bonuses=gl('bonuses',[]).filter(b=>{const d=new Date(b.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const wb=XLSX.utils.book_new();
+  const tH=att.reduce((s,a)=>s+a.hours,0),tBon=bonuses.filter(b=>b.status!=='בוטל').reduce((s,b)=>s+b.reward,0);
+  const lateDays=att.filter(a=>a.tardiness&&a.tardiness.late>0).length;
+  const earlyDays=att.filter(a=>a.tardiness&&a.tardiness.earlyLeave>0).length;
+  const onTimePct=att.length?((att.length-lateDays)/att.length*100).toFixed(0):100;
+
+  // Sheet 1 – נוכחות + עמידה בזמנים
+  const aR=[['תאריך','יום בשבוע','שעת כניסה','סטטוס כניסה','שעת יציאה','סטטוס יציאה','שעות','שכר (₪)','הפסקות','הערות']];
+  att.forEach(a=>{
+    const d=new Date(a.date+'T00:00:00');
+    const t=a.tardiness||checkTardiness(a.in,a.out);
+    const breaks=a.breaks&&a.breaks.length?a.breaks.map(b=>b.out+'–'+b.back).join(', '):'';
+    aR.push([a.date,DAYS_HE[d.getDay()],a.in,tardyLabel(t),a.out,exitLabel(t),a.hours,parseFloat((a.hours*hourly).toFixed(2)),breaks,a.note||'']);
+  });
+  aR.push([]);
+  aR.push(['סה"כ','','','','','',parseFloat(tH.toFixed(2)),parseFloat((tH*hourly).toFixed(2)),'','']);
+  aR.push([]);
+  aR.push(['סיכום עמידה בזמנים','']);
+  aR.push(['ימי עבודה',att.length]);
+  aR.push(['ימי איחור',lateDays]);
+  aR.push(['יציאות מוקדמות',earlyDays]);
+  aR.push(['אחוז עמידה בזמנים',onTimePct+'%']);
+  const wsA=XLSX.utils.aoa_to_sheet(aR);
+  wsA['!cols']=[{wch:14},{wch:12},{wch:12},{wch:18},{wch:12},{wch:18},{wch:8},{wch:12},{wch:18},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,wsA,'נוכחות');
+
+  // Sheet 2 – בונוסים
+  const bR=[['תאריך','שם לקוח','סוג בונוס','סכום עסקה (₪)','תגמול (₪)','גורם מפנה','סטטוס','הערות']];
+  bonuses.forEach(b=>bR.push([b.date,b.client,b.typeLabel||b.type,b.amount,b.reward,b.referrer,b.status||'סגור',b.note||'']));
+  bR.push([]);bR.push(['סה"כ (ללא בוטל)','','','',parseFloat(tBon.toFixed(2)),'','','']);
+  const wsB=XLSX.utils.aoa_to_sheet(bR);wsB['!cols']=[{wch:14},{wch:18},{wch:20},{wch:18},{wch:14},{wch:14},{wch:10},{wch:22}];
+  XLSX.utils.book_append_sheet(wb,wsB,'בונוסים');
+
+  // Sheet 3 – סיכום
+  const wsS=XLSX.utils.aoa_to_sheet([
+    [`דוח חודשי – ${MONTHS_HE[month]} ${year} | ${name}`],[],
+    ['פריט','ערך'],
+    ['ימי עבודה',att.length],['סה"כ שעות',parseFloat(tH.toFixed(2))],
+    ['שכר שעתי',hourly],['שכר בסיס',parseFloat((tH*hourly).toFixed(2))],
+    ['מספר עסקאות',bonuses.length],['סה"כ בונוסים',parseFloat(tBon.toFixed(2))],
+    [],[' סה"כ לתשלום',parseFloat((tH*hourly+tBon).toFixed(2))],[],
+    ['עמידה בזמנים',''],['ימי איחור',lateDays],
+    ['יציאות מוקדמות',earlyDays],['אחוז עמידה',onTimePct+'%']
+  ]);
+  wsS['!cols']=[{wch:22},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,wsS,'סיכום');
+  XLSX.writeFile(wb,`דוח_חודשי_${MONTHS_HE[month]}_${year}_${name}.xlsx`);
+  toast('✓ אקסל הורד!');
+}
+function exportAnnualExcel(){
+  const year=parseInt(document.getElementById('ann-year').value),hourly=getHourly(),name=getName();
+  const att=gl('attendance',[]).filter(a=>new Date(a.date).getFullYear()===year);
+  const bonuses=gl('bonuses',[]).filter(b=>new Date(b.date).getFullYear()===year);
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1 – פירוט חודשי
+  const rows=[['חודש','ימים','שעות','שכר בסיס (₪)','בונוסים (₪)','עסקאות','ימי איחור','יציאות מוקדמות','% עמידה','סה"כ (₪)']];
+  let tD=0,tH=0,tBase=0,tBonus=0,tCount=0,tLate=0,tEarly=0;
+  for(let m=0;m<12;m++){
+    const mA=att.filter(a=>new Date(a.date).getMonth()===m),mB=bonuses.filter(b=>new Date(b.date).getMonth()===m&&b.status!=='בוטל');
+    const h=mA.reduce((s,a)=>s+a.hours,0),base=h*hourly,bonus=mB.reduce((s,b)=>s+b.reward,0);
+    const late=mA.filter(a=>a.tardiness&&a.tardiness.late>0).length;
+    const early=mA.filter(a=>a.tardiness&&a.tardiness.earlyLeave>0).length;
+    const pct=mA.length?((mA.length-late)/mA.length*100).toFixed(0):'-';
+    tD+=mA.length;tH+=h;tBase+=base;tBonus+=bonus;tCount+=mB.length;tLate+=late;tEarly+=early;
+    rows.push([MONTHS_HE[m],mA.length,parseFloat(h.toFixed(2)),parseFloat(base.toFixed(2)),parseFloat(bonus.toFixed(2)),mB.length,late,early,pct+'%',parseFloat((base+bonus).toFixed(2))]);
+  }
+  rows.push([]);
+  const totPct=tD?((tD-tLate)/tD*100).toFixed(0):100;
+  rows.push(['סה"כ',tD,parseFloat(tH.toFixed(2)),parseFloat(tBase.toFixed(2)),parseFloat(tBonus.toFixed(2)),tCount,tLate,tEarly,totPct+'%',parseFloat((tBase+tBonus).toFixed(2))]);
+  const aM=Array.from({length:12},(_,m)=>m).filter(m=>att.some(a=>new Date(a.date).getMonth()===m)||bonuses.some(b=>new Date(b.date).getMonth()===m)).length||1;
+  rows.push(['ממוצע חודשי',parseFloat((tD/aM).toFixed(1)),parseFloat((tH/aM).toFixed(1)),parseFloat((tBase/aM).toFixed(2)),parseFloat((tBonus/aM).toFixed(2)),parseFloat((tCount/aM).toFixed(1)),parseFloat((tLate/aM).toFixed(1)),parseFloat((tEarly/aM).toFixed(1)),'-',parseFloat(((tBase+tBonus)/aM).toFixed(2))]);
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:12},{wch:8},{wch:10},{wch:16},{wch:14},{wch:10},{wch:12},{wch:16},{wch:10},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'פירוט חודשי');
+
+  // Sheet 2 – נוכחות שנתית + עמידה בזמנים
+  const aR=[['תאריך','יום','כניסה','סטטוס כניסה','יציאה','סטטוס יציאה','שעות','שכר (₪)','הערות']];
+  att.forEach(a=>{
+    const d=new Date(a.date+'T00:00:00');
+    const t=a.tardiness||checkTardiness(a.in,a.out);
+    aR.push([a.date,DAYS_HE[d.getDay()],a.in,tardyLabel(t),a.out,exitLabel(t),a.hours,parseFloat((a.hours*hourly).toFixed(2)),a.note||'']);
+  });
+  const wsA=XLSX.utils.aoa_to_sheet(aR);wsA['!cols']=[{wch:14},{wch:10},{wch:10},{wch:18},{wch:10},{wch:18},{wch:8},{wch:12},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,wsA,'נוכחות שנתית');
+
+  // Sheet 3 – בונוסים שנתיים
+  const bR=[['תאריך','לקוח','סוג','סכום (₪)','תגמול (₪)','גורם מפנה','סטטוס','הערות']];
+  bonuses.forEach(b=>bR.push([b.date,b.client,b.typeLabel||b.type,b.amount,b.reward,b.referrer,b.status||'',b.note||'']));
+  const wsB=XLSX.utils.aoa_to_sheet(bR);wsB['!cols']=[{wch:14},{wch:16},{wch:18},{wch:14},{wch:12},{wch:14},{wch:10},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,wsB,'בונוסים שנתיים');
+
+  XLSX.writeFile(wb,`דוח_שנתי_${year}_${name}.xlsx`);toast('✓ אקסל שנתי הורד!');
+}
+
+// ===================== VIEW TOGGLE =====================
+let currentView='calendar';
+function switchView(v){
+  currentView=v;
+  document.getElementById('panel-calendar').style.display=v==='calendar'?'block':'none';
+  document.getElementById('panel-table').style.display=v==='table'?'block':'none';
+  document.getElementById('view-cal-btn').className='btn btn-sm '+(v==='calendar'?'btn-primary':'btn-ghost');
+  document.getElementById('view-table-btn').className='btn btn-sm '+(v==='table'?'btn-primary':'btn-ghost');
+}
+
+// ===================== CALENDAR =====================
+function renderCalendar(){
+  const month=parseInt(document.getElementById('att-month').value);
+  const year=parseInt(document.getElementById('att-year').value);
+  const att=gl('attendance',[]);
+  const absences=gl('absences',[]);
+  const today=new Date();
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const dayNames=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+  let html=`<div class="cal-header-row">${dayNames.map(d=>`<div class="cal-header-day">${d}</div>`).join('')}</div><div class="cal-grid">`;
+  for(let i=0;i<firstDay;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let day=1;day<=daysInMonth;day++){
+    const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const d=new Date(year,month,day);
+    const dow=d.getDay();
+    const isToday=d.toDateString()===today.toDateString();
+    const isWeekend=dow===5||dow===6;
+    const attDay=att.find(a=>a.date===ds);
+    const absDay=absences.find(a=>a.date===ds);
+    let cls='cal-day',icon='',info='';
+    if(isWeekend){cls+=' weekend';}
+    else if(attDay){
+      const t=attDay.tardiness||checkTardiness(attDay.in,attDay.out);
+      cls+=t.late>0?' work-late':' work';
+      icon=t.late>0?'⏰':'✅';
+      info=attDay.hours.toFixed(1)+'ש׳';
+    }else if(absDay){
+      const absType=getAbsenceTypes().find(t=>t.name===absDay.type);
+      const bg=absType?absType.color:'#ede9fe';
+      const tc=absType?absType.textColor:'#4c1d95';
+      icon=absType?absType.icon:'📅';
+      info=absDay.type;
+      html+=`<div class="cal-day today-${isToday?'highlight':''}" style="background:${bg};color:${tc};${isToday?'outline:2.5px solid var(--accent);outline-offset:1px;':''}" onclick="calClick('${ds}')" title="${info}">
+        <span class="cal-num">${day}</span>
+        <span class="cal-icon">${icon}</span>
+        <span class="cal-info">${info}</span>
+      </div>`;
+      continue;
+      cls+=' missing';icon='❓';
+    }
+    if(isToday)cls+=' today-highlight';
+    html+=`<div class="${cls}" onclick="${!isWeekend?`calClick('${ds}')`:''}" title="${info}">
+      <span class="cal-num">${day}</span>
+      <span class="cal-icon">${icon}</span>
+      ${info?`<span class="cal-info">${info}</span>`:''}
+    </div>`;
+  }
+  html+=`</div>`;
+  document.getElementById('calendar-container').innerHTML=html;
+}
+function calClick(dateStr){
+  document.getElementById('att-date').value=dateStr;
+  switchAttTab('work');
+  document.getElementById('att-form-work').scrollIntoView({behavior:'smooth'});
+}
+
+// ===================== FORECAST =====================
+function renderForecast(){
+  const month=parseInt(document.getElementById('att-month').value);
+  const year=parseInt(document.getElementById('att-year').value);
+  const now=new Date();
+  const el=document.getElementById('forecast-card');
+  if(!el)return;
+  if(now.getMonth()!==month||now.getFullYear()!==year){el.style.display='none';return;}
+  el.style.display='block';
+  const hourly=getHourly();
+  const att=gl('attendance',[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const bonuses=gl('bonuses',[]).filter(b=>{const d=new Date(b.date);return d.getMonth()===month&&d.getFullYear()===year&&b.status!=='בוטל';});
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=now.getDate();
+  let remainWD=0;
+  for(let d=today+1;d<=daysInMonth;d++){const dow=new Date(year,month,d).getDay();if(dow!==5&&dow!==6)remainWD++;}
+  const n=att.length||1;
+  const avgH=att.reduce((s,a)=>s+a.hours,0)/n;
+  const avgB=bonuses.reduce((s,b)=>s+b.reward,0)/n;
+  const curBase=att.reduce((s,a)=>s+a.hours,0)*hourly;
+  const curBonus=bonuses.reduce((s,b)=>s+b.reward,0);
+  const fBase=curBase+(avgH*remainWD*hourly);
+  const fBonus=curBonus+(avgB*remainWD);
+  el.innerHTML=`<div class="forecast-title">🔮 תחזית לסוף ${MONTHS_HE[month]}</div>
+  <div class="forecast-grid">
+    <div class="f-item"><div class="f-label">עד כה</div><div class="f-value">${fc(curBase+curBonus)}</div><div class="f-sub">${att.length} ימים</div></div>
+    <div class="f-item"><div class="f-label">ימים שנותרו</div><div class="f-value">${remainWD}</div><div class="f-sub">ימי עבודה</div></div>
+    <div class="f-item"><div class="f-label">שכר צפוי</div><div class="f-value">${fc(fBase)}</div><div class="f-sub">ממוצע ${avgH.toFixed(1)}ש׳/יום</div></div>
+    <div class="f-item"><div class="f-label">בונוסים צפויים</div><div class="f-value">${fc(fBonus)}</div><div class="f-sub">ממוצע ${fc(avgB)}/יום</div></div>
+    <div class="f-item" style="background:rgba(37,99,235,.08);"><div class="f-label">סה"כ צפוי</div><div class="f-value" style="color:var(--accent);font-size:22px;">${fc(fBase+fBonus)}</div><div class="f-sub">תחזית סוף חודש</div></div>
+  </div>`;
+}
+
+// ===================== ACHIEVEMENTS =====================
+function renderAchievements(){
+  const att=gl('attendance',[]);
+  const bonuses=gl('bonuses',[]).filter(b=>b.status!=='בוטל');
+  const now=new Date();
+  const earned=[];
+  // ימים רצופים ללא איחור
+  let streak=0,maxStreak=0;
+  [...att].sort((a,b)=>a.date.localeCompare(b.date)).forEach(a=>{
+    const t=a.tardiness||checkTardiness(a.in,a.out);
+    if(!t||!t.late){streak++;maxStreak=Math.max(maxStreak,streak);}else streak=0;
+  });
+  if(maxStreak>=10)earned.push({icon:'🏆',text:`${maxStreak} ימים רצופים ללא איחור!`,cls:'ach-gold'});
+  else if(maxStreak>=5)earned.push({icon:'🎯',text:`${maxStreak} ימים ללא איחור`,cls:'ach-green'});
+  else if(maxStreak>=3)earned.push({icon:'⭐',text:`${maxStreak} ימים ללא איחור`,cls:'ach-blue'});
+  // בונוסים החודש
+  const mBon=bonuses.filter(b=>{const d=new Date(b.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  const mTotal=mBon.reduce((s,b)=>s+b.reward,0);
+  if(mBon.length>=10)earned.push({icon:'💎',text:`${mBon.length} עסקאות החודש!`,cls:'ach-gold'});
+  if(att.length>=20)earned.push({icon:'🔥',text:`${att.length} ימי עבודה!`,cls:'ach-green'});
+  if(mTotal>=5000)earned.push({icon:'💰',text:`${fc(mTotal)} בונוסים החודש!`,cls:'ach-gold'});
+  const el=document.getElementById('achievements-wrap');
+  if(el)el.innerHTML=earned.map(a=>`<div class="achievement ${a.cls}">${a.icon} ${a.text}</div>`).join('');
+}
+
+// ===================== NOTIFICATIONS =====================
+function initNotifications(){
+  if(!('Notification' in window))return;
+  if(Notification.permission==='default')Notification.requestPermission();
+  setInterval(()=>{
+    const now=new Date();
+    if(now.getHours()===13&&now.getMinutes()===0){
+      const today=now.toISOString().split('T')[0];
+      if(!gl('attendance',[]).find(a=>a.date===today)){
+        if(Notification.permission==='granted')new Notification('⏰ שכר Pro','לא הוזנה נוכחות להיום!');
+        toast('⏰ תזכורת – לא הוזנה נוכחות להיום!');
+      }
+    }
+    if(now.getDate()===1&&now.getHours()===9&&now.getMinutes()===0){
+      if(Notification.permission==='granted')new Notification('💾 שכר Pro','זמן לגבות את הנתונים!');
+      toast('💾 תזכורת גיבוי חודשי!');
+    }
+  },60000);
+}
+
+// ===================== WHATSAPP =====================
+function shareWhatsApp(){
+  const month=parseInt(document.getElementById('rep-month').value);
+  const year=parseInt(document.getElementById('rep-year').value);
+  const hourly=getHourly(),name=getName();
+  const att=gl('attendance',[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const bonuses=gl('bonuses',[]).filter(b=>{const d=new Date(b.date);return d.getMonth()===month&&d.getFullYear()===year&&b.status!=='בוטל';});
+  const tH=att.reduce((s,a)=>s+a.hours,0);
+  const basePay=tH*hourly;
+  const bonusPay=bonuses.reduce((s,b)=>s+b.reward,0);
+  const lateDays=att.filter(a=>a.tardiness&&a.tardiness.late>0).length;
+  const msg=`📊 *דוח חודשי – ${MONTHS_HE[month]} ${year}*\n👤 ${name}\n\n⏱ *נוכחות*\n• ימי עבודה: ${att.length}\n• שעות: ${tH.toFixed(1)}\n• איחורים: ${lateDays}\n\n💰 *הכנסות*\n• שכר בסיס: ${fc(basePay)}\n• בונוסים (${bonuses.length}): ${fc(bonusPay)}\n• *סה"כ: ${fc(basePay+bonusPay)}*\n\n_שכר Pro_`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+// ===================== AI SUMMARY =====================
+async function generateAISummary(){
+  const month=parseInt(document.getElementById('rep-month').value);
+  const year=parseInt(document.getElementById('rep-year').value);
+  const hourly=getHourly(),name=getName();
+  const att=gl('attendance',[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const bonuses=gl('bonuses',[]).filter(b=>{const d=new Date(b.date);return d.getMonth()===month&&d.getFullYear()===year;});
+  const tH=att.reduce((s,a)=>s+a.hours,0);
+  const basePay=tH*hourly;
+  const bonusPay=bonuses.filter(b=>b.status!=='בוטל').reduce((s,b)=>s+b.reward,0);
+  const lateDays=att.filter(a=>a.tardiness&&a.tardiness.late>0).length;
+  const refMap={};bonuses.forEach(b=>{refMap[b.referrer]=(refMap[b.referrer]||0)+b.reward;});
+  const topRef=Object.entries(refMap).sort((a,b)=>b[1]-a[1])[0];
+  const prevM=month===0?11:month-1,prevY=month===0?year-1:year;
+  const prevAtt=gl('attendance',[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===prevM&&d.getFullYear()===prevY;});
+  const prevBon=gl('bonuses',[]).filter(b=>{const d=new Date(b.date);return d.getMonth()===prevM&&d.getFullYear()===prevY&&b.status!=='בוטל';});
+  const prevTotal=prevAtt.reduce((s,a)=>s+a.hours,0)*hourly+prevBon.reduce((s,b)=>s+b.reward,0);
+  const thisTotal=basePay+bonusPay;
+  const el=document.getElementById('ai-summary-container');
+  el.innerHTML=`<div class="ai-box"><div class="ai-title">🤖 סיכום AI – ${MONTHS_HE[month]} ${year} <span class="ai-dot"></span></div><div class="ai-text" id="ai-text">מנתח נתונים...</div></div>`;
+  el.scrollIntoView({behavior:'smooth'});
+  try{
+    const prompt=`אתה עוזר אישי לעובד בתחום הפנסיה בישראל. נתח את הנתונים הבאים וכתוב סיכום חודשי אישי, קצר ומעודד בעברית (5-6 משפטים). כלול: השוואה לחודש קודם, נקודות חיוביות, תובנות על ביצועים.
+
+שם: ${name} | חודש: ${MONTHS_HE[month]} ${year}
+ימי עבודה: ${att.length} | שעות: ${tH.toFixed(1)} | איחורים: ${lateDays}
+שכר בסיס: ${fc(basePay)} | בונוסים: ${fc(bonusPay)} (${bonuses.length} עסקאות)
+סה"כ: ${fc(thisTotal)} | חודש קודם: ${fc(prevTotal)}
+שינוי: ${thisTotal>=prevTotal?'+':''}${fc(thisTotal-prevTotal)}
+גורם מפנה מוביל: ${topRef?topRef[0]+' ('+fc(topRef[1])+')':'אין'}`;
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await response.json();
+    document.getElementById('ai-text').textContent=data.content&&data.content[0]?data.content[0].text:'לא הצלחתי לייצר סיכום.';
+  }catch(e){
+    document.getElementById('ai-text').textContent='שגיאה בחיבור ל-AI. נסה שוב.';
+  }
+}
+
+// ===================== START =====================
+document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPin();});
+</script>
+</body>
+</html>
